@@ -1,7 +1,11 @@
 import * as z from "zod";
 
 export const SettingsSchema = z.object({
-    name: z.optional(z.string())
+    name: z.optional(z.string()),
+    email: z.optional(z.string().email({
+        message: "Email is required"
+    })),
+    image: z.optional(z.string())
 });
 
 export const ResetSchema = z.object({
