@@ -1,4 +1,81 @@
+import { Gender, Nacionality } from "@prisma/client";
 import * as z from "zod";
+
+// Definición de los enums para la validación
+const GenderEnum = z.enum([Gender.M, Gender.F]);
+const NacionalityEnum = z.enum([Nacionality.Ecuatoriano, Nacionality.Extranjero]);
+
+export const updateMemberSchema = z.object({
+    identification: z.string().min(10,{
+        message: "Mininum 10 characters"
+    }).max(12,{
+        message: "Maximum 12 characters"
+    }).optional(),
+    name: z.string().min(4,{
+        message: "Mininum 4 characters"
+    }).optional(),
+    lastname: z.string().min(4,{
+        message: "Mininum 4 characters"
+    }).optional(),
+    email: z.string().email({
+        message: "Email is required",
+    }).optional(),
+    phone: z.string().min(10, {
+        message: "Minimum 10 characters"
+    }).regex(/^[0-9]+$/, {
+        message: "Phone must contain only numbers"
+    }).optional(),
+    emergency_phone: z.string().min(7, {
+        message: "Minimum 7 characters"
+    }).regex(/^[0-9]+$/, {
+        message: "Emergency phone must contain only numbers"
+    }).optional(),
+    born_date: z.date({
+        message: "Date is required"
+    }).optional(),
+    direction: z.string().min(12,{
+        message: "Mininum 12 characters"
+    }).optional(),
+    gender: GenderEnum.optional(),
+    nacionality: NacionalityEnum.optional(),
+    plan: z.number().optional()
+})
+
+export const MemberSchema = z.object({
+    identification: z.string().min(10,{
+        message: "Mininum 10 characters"
+    }).max(12,{
+        message: "Maximum 12 characters"
+    }),
+    name: z.string().min(4,{
+        message: "Mininum 4 characters"
+    }),
+    lastname: z.string().min(4,{
+        message: "Mininum 4 characters"
+    }),
+    email: z.string().email({
+        message: "Email is required",
+    }),
+    phone: z.string().min(10, {
+        message: "Minimum 10 characters"
+    }).regex(/^[0-9]+$/, {
+        message: "Phone must contain only numbers"
+    }),
+    emergency_phone: z.string().min(7, {
+        message: "Minimum 7 characters"
+    }).regex(/^[0-9]+$/, {
+        message: "Emergency phone must contain only numbers"
+    }),
+    born_date: z.date({
+        message: "Date is required"
+    }),
+    direction: z.string().min(12,{
+        message: "Mininum 12 characters"
+    }),
+    gender: GenderEnum,
+    nacionality: NacionalityEnum,
+    plan: z.number().optional()
+})
 
 export const UpdatePlanSchema = z.object({
     name: z.optional(z.string().min(5,{

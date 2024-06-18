@@ -1,11 +1,15 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { verify } from 'jsonwebtoken';
+import { getUserByEmail, getUserById } from "@/data/user";
 import { Role } from "@prisma/client";
+import { generateVerificationToken } from "@/data/tokens";
+import { sendVerificationEmail } from "@/data/mail";
+import bcrypt from "bcryptjs";
+import { MemberSchema, RegisterSchema } from "@/schemas";
 import { ZodError } from "zod";
-import { getUserById } from "@/data/user";
-import { PlanSchema } from "@/schemas";
-import { getPlanByName } from "@/data/plan";
+import { getMemberByEmail } from "@/data/member";
+import { getPlanById } from "@/data/plan";
 
 export async function GET(req: Request) {
     try {
@@ -49,9 +53,9 @@ export async function GET(req: Request) {
             return NextResponse.json({ error: "Session not found" }, { status: 404 });
         }
 
-        const existingUserId = await getUserById(userId)
+        const existingUser = await getUserById(userId)
 
-        if (!existingUserId) {
+        if (!existingUser) {
             return NextResponse.json({ error: "User not found" }, { status: 404 });
         }
 
@@ -62,7 +66,7 @@ export async function GET(req: Request) {
         }
 
         // verificar el rol del usuario para acceder a la ruta
-        if (!existingUserId || existingUserId.role !== Role.ADMIN) {
+        if (!existingUser || existingUser.role !== Role.ADMIN) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
         }
 
@@ -71,17 +75,17 @@ export async function GET(req: Request) {
         const skip = parseInt(url.searchParams.get("skip") || "0", 10);
         const take = parseInt(url.searchParams.get("take") || "10", 10);
 
-        // Retorna todos los planes de la base de datos con o sin paginación
-        const plans = await prisma.plan.findMany({
+        // Retorna todas las membresias de la base de datos con o sin paginación
+        const members = await prisma.member.findMany({
             //skip: skip,
             //take: take,
         });
 
 
         return NextResponse.json({
-            success: "Return plans successfully",
-            plan: {
-                ...plans
+            success: "Return members successfully",
+            member: {
+                ...members
             },
         }, { status: 200 });
 
@@ -152,24 +156,37 @@ export async function POST(req: Request) {
         }
 
         // Validación con Zod
-        const validatedPlan = PlanSchema.parse(await req.json());
+        const validatedMember = MemberSchema.parse(await req.json());
 
-        // Verifica si el plan ya existe
-        const existingPlan = await getPlanByName(validatedPlan.name);
+        let planValidated;
 
-        if (existingPlan) {
-            return NextResponse.json({ error: "Plan already exist"}, { status: 401 });
+        if (validatedMember.plan !== undefined) {
+            const existingPlan = await getPlanById(validatedMember.plan)
+
+            if (!existingPlan) {
+                return NextResponse.json({ error: "Invalid plan ID" }, { status: 400 });
+            }
+
+            planValidated = { connect: { id: validatedMember.plan } };
         }
 
-        const createdPlan = await prisma.plan.create({
+        // Verifica si el miembro ya existe
+        const existingMember = await getMemberByEmail(validatedMember.email);
+
+        if (existingMember) {
+            return NextResponse.json({ error: "Member already exist"}, { status: 401 });
+        }
+
+        const createdMember = await prisma.member.create({
             data: {
-                ...validatedPlan
+                ...validatedMember,
+                plan: planValidated
             }
         });
 
         return NextResponse.json({
-            success: "Plan created successfully",
-            plan: createdPlan,
+            success: "Member created successfully",
+            member: createdMember,
         }, { status: 200 });
 
     } catch (error) {

@@ -11,3 +11,15 @@ export const getPlanByName = async (name: string) => {
         return null;
     }
 }
+
+export const getPlanById = async (id: number) => {
+    try {
+        const plan = await prisma.plan.findFirst({
+            where : {id}
+        });
+        return plan;
+
+    } catch {
+        return null;
+    }
+}
