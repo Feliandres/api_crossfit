@@ -1,5 +1,35 @@
 import * as z from "zod";
 
+export const UpdatePlanSchema = z.object({
+    name: z.optional(z.string().min(5,{
+        message: "Mininum 5 characters"
+    })),
+    description: z.optional(z.string().min(12,{
+        message: "Mininum 12 characters"
+    })),
+    price: z.optional(z.number().nonnegative(
+        {message: "Not exist negative price plan"
+    })),
+    duration: z.optional(z.number().nonnegative(
+        {message: "Not exist negative duration plan"
+    })),
+})
+
+export const PlanSchema = z.object({
+    name: z.string().min(5,{
+        message: "Mininum 5 characters"
+    }),
+    description: z.string().min(12,{
+        message: "Mininum 12 characters"
+    }),
+    price: z.number().nonnegative(
+        {message: "Not exist negative price plan"
+    }),
+    duration: z.number().nonnegative(
+        {message: "Not exist negative duration plan"
+    }),
+})
+
 export const SettingsSchema = z.object({
     name: z.optional(z.string()),
     email: z.optional(z.string().email({

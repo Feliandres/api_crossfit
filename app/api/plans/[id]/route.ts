@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { verify } from 'jsonwebtoken';
+import { Role } from "@prisma/client";
 import { ZodError } from "zod";
 import { getUserById } from "@/data/user";
-import { SettingsSchema } from "@/schemas";
-import { Role } from "@prisma/client";
+import { UpdatePlanSchema } from "@/schemas";
 
 export async function GET(req: Request, { params }: { params: { id: string } }) {
     try {
@@ -66,18 +66,21 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
         }
 
         // id del plan que se va actualizar
-        const idUser = params.id;
+        const idPlan = parseInt(params.id);
 
         // Retorna el plan por id
-        const getUser = await prisma.user.findUnique({
-            where: {id: idUser}
+        const getPlan = await prisma.plan.findFirst({
+            where: {id: idPlan}
         });
 
+        if (!getPlan) {
+            return NextResponse.json({ error: "Plan not found" }, { status: 404 });
+        }
 
         return NextResponse.json({
             success: "Return plan successfully",
             plan: {
-                ...getUser
+                ...getPlan
             },
         }, { status: 200 });
 
@@ -109,7 +112,7 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
         try {
             decodedToken = verify(token, jwtSecret);
         } catch (error) {
-            return NextResponse.json({ error: "Invalid token" }, { status: 401 });
+            return NextResponse.json({ error: "Invalid token"}, { status: 401 });
         }
 
         if (!decodedToken || typeof decodedToken !== 'object' || !decodedToken.userId) {
@@ -147,30 +150,32 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
             return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
         }
 
-        // id del usuario que se va actualizar
-        const idUser = params.id;
+        // id del plan que se va actualizar
+        const idPlan = parseInt(params.id);
 
-        // Validar datos con zod
-        const validatedUser = SettingsSchema.parse(await req.json());
+        // Valida los datos con Zod
+        const validatedPlan = UpdatePlanSchema.parse(await req.json());
 
-        // Actualizar el usuario
-        const updatedUser = await prisma.user.update({
-            where: { id: idUser},
+        // Retorna el plan por id
+        const updatedPlan = await prisma.plan.update({
+            where: {id: idPlan},
             data: {
-                ...validatedUser
+                ...validatedPlan,
             }
-        })
+        });
 
         return NextResponse.json({
-            success: "User updated successfully",
-            user: updatedUser,
+            success: "Plan updated successfully",
+            plan: {
+                ...updatedPlan
+            },
         }, { status: 200 });
 
     } catch (error) {
         if (error instanceof ZodError) {
             return NextResponse.json({ error: "Invalid fields", details: error.errors }, { status: 400 });
         }
-        return NextResponse.json({ error: "Unexpected error" }, { status: 500 });
+        return NextResponse.json({ error: "Unexpected error"}, { status: 500 });
     }
 }
 
@@ -197,7 +202,7 @@ export async function DELETE(req: Request, { params }: { params: { id: string } 
         try {
             decodedToken = verify(token, jwtSecret);
         } catch (error) {
-            return NextResponse.json({ error: "Invalid token" }, { status: 401 });
+            return NextResponse.json({ error: "Invalid token"}, { status: 401 });
         }
 
         if (!decodedToken || typeof decodedToken !== 'object' || !decodedToken.userId) {
@@ -235,34 +240,26 @@ export async function DELETE(req: Request, { params }: { params: { id: string } 
             return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
         }
 
-        // id del usuario que se va actualizar
-        const idUser = params.id;
+        // id del plan que se va actualizar
+        const idPlan = parseInt(params.id);
 
-        // Verifica el status del usuario
-        const verificationStatus = await prisma.user.findFirst({
-            where: { id: idUser}
-        })
+        // Eliminar el plan por id
+        const plan = await prisma.plan.delete({
+            where: {id: idPlan}
+        });
 
-        if ( verificationStatus?.status === false) {
-            return NextResponse.json({ error: "User already deleted" }, { status: 401 });
+        if (!plan) {
+            return NextResponse.json({ error: "Plan not found" }, { status: 404 });
         }
 
-        const deletedUser = await prisma.user.update({
-            where: { id: idUser },
-            data: {
-                status: false,
-            }
-        })
-
         return NextResponse.json({
-            success: "User deleted successfully",
-            user: deletedUser,
+            success: "Deleted plan successfully",
+            plan: {
+                ...plan
+            },
         }, { status: 200 });
 
     } catch (error) {
-        if (error instanceof ZodError) {
-            return NextResponse.json({ error: "Invalid fields", details: error.errors }, { status: 400 });
-        }
-        return NextResponse.json({ error: "Unexpected error" }, { status: 500 });
+        return NextResponse.json({ error: "Unexpected error"}, { status: 500 });
     }
 }

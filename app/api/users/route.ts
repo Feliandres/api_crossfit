@@ -51,9 +51,9 @@ export async function GET(req: Request) {
             return NextResponse.json({ error: "Session not found" }, { status: 404 });
         }
 
-        const existingUserId = await getUserById(userId)
+        const existingUser = await getUserById(userId)
 
-        if (!existingUserId) {
+        if (!existingUser) {
             return NextResponse.json({ error: "User not found" }, { status: 404 });
         }
 
@@ -64,9 +64,7 @@ export async function GET(req: Request) {
         }
 
         // verificar el rol del usuario para acceder a la ruta
-        const verifyRole = await getUserById(userId);
-
-        if (!verifyRole || verifyRole.role !== Role.ADMIN) {
+        if (!existingUser || existingUser.role !== Role.ADMIN) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
         }
 
@@ -151,9 +149,7 @@ export async function POST(req: Request) {
         }
 
         // verificar el rol del usuario para acceder a la ruta
-        const verifyRole = await getUserById(userId);
-
-        if (!verifyRole || verifyRole.role !== Role.ADMIN) {
+        if (!existingUserId || existingUserId.role !== Role.ADMIN) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
         }
 
@@ -191,7 +187,7 @@ export async function POST(req: Request) {
 
         // Devuelve la respuesta con los datos del usuario y el token de verificación
         return NextResponse.json({
-            success: "Successfully Register",
+            success: "Create User Successfully",
             user: {
                 name: user.name,
                 email: user.email,
