@@ -4,6 +4,7 @@ import { verify } from 'jsonwebtoken';
 import { SettingsSchema } from "@/schemas";
 import { ZodError } from "zod";
 import cloudinary from "cloudinary";
+import { getUserSession } from "@/data/session";
 
 cloudinary.v2.config({
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -13,31 +14,15 @@ cloudinary.v2.config({
 
 export async function PUT(req: Request) {
     try {
-        const jwtSecret = process.env.JWT_SECRET;
+        // Verifica la sesion y token de usuario y trae los datos del usuario
+        const { user,token, error, status } = await getUserSession(req);
 
-        if (!jwtSecret) {
-            throw new Error('JWT_SECRET is not defined');
+        if (error) {
+            return NextResponse.json({ error }, { status });
         }
 
-        const authHeader = req.headers.get('Authorization');
-        if (!authHeader || !authHeader.startsWith('Bearer ')) {
-            return NextResponse.json({ error: "Token not provided" }, { status: 401 });
-        }
-
-        const token = authHeader.split(' ')[1];
-
-        let decodedToken;
-        try {
-            decodedToken = verify(token, jwtSecret);
-        } catch (error) {
-            return NextResponse.json({ error: "Invalid token"}, { status: 401 });
-        }
-
-        if (!decodedToken || typeof decodedToken !== 'object' || !decodedToken.userId) {
-            return NextResponse.json({ error: "Invalid token" }, { status: 401 });
-        }
-
-        const userId = decodedToken.userId;
+        // Obtener Id del usuario
+        const userId = user?.id;
 
         // Validar datos con zod
         const editProfile = SettingsSchema.parse(await req.json());

@@ -1,68 +1,25 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { verify } from 'jsonwebtoken';
 import { ZodError } from "zod";
-import { getUserById } from "@/data/user";
-import { SettingsSchema, updateMemberSchema } from "@/schemas";
+import {  updateMemberSchema } from "@/schemas";
 import { Role } from "@prisma/client";
 import { getPlanById } from "@/data/plan";
+import { getUserSession } from "@/data/session";
 
 export async function GET(req: Request, { params }: { params: { id: string } }) {
     try {
-        const jwtSecret = process.env.JWT_SECRET;
+        // Verifica la sesion y token de usuario y trae los datos del usuario
+        const { user, error, status } = await getUserSession(req);
 
-        if (!jwtSecret) {
-            throw new Error('JWT_SECRET is not defined');
+        if (error) {
+            return NextResponse.json({ error }, { status });
         }
 
-        // Obtiene el token
-        const authHeader = req.headers.get('Authorization');
-        if (!authHeader || !authHeader.startsWith('Bearer ')) {
-            return NextResponse.json({ error: "Token not provided" }, { status: 401 });
-        }
-
-        // Decodifica el token
-        const token = authHeader.split(' ')[1];
-
-        let decodedToken;
-        try {
-            decodedToken = verify(token, jwtSecret);
-        } catch (error) {
-            return NextResponse.json({ error: "Invalid token"}, { status: 401 });
-        }
-
-        if (!decodedToken || typeof decodedToken !== 'object' || !decodedToken.userId) {
-            return NextResponse.json({ error: "Invalid token" }, { status: 401 });
-        }
-
-        // Obtener ID del usuario
-        const userId = decodedToken.userId;
-
-        // Verificar la sesion del usuario
-        const session = await prisma.session.findFirst({
-            where: {
-                sessionToken: token,
-            },
-        });
-
-        if (!session) {
-            return NextResponse.json({ error: "Session not found" }, { status: 404 });
-        }
-
-        const existingUserId = await getUserById(userId)
-
-        if (!existingUserId) {
-            return NextResponse.json({ error: "User not found" }, { status: 404 });
-        }
-
-        // Verifica si la sesion expiro
-        const currentTime = new Date();
-        if (session.expires < currentTime) {
-            return NextResponse.json({ error: "Session expired" }, { status: 401 });
-        }
+        // Obtener Id del usuario
+        const userId = user?.id;
 
         // verificar el rol del usuario para acceder a la ruta
-        if (!existingUserId || existingUserId.role !== Role.ADMIN) {
+        if (!user || user.role !== Role.ADMIN) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
         }
 
@@ -91,60 +48,18 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
 
 export async function PUT(req: Request, { params }: { params: { id: string } }) {
     try {
-        const jwtSecret = process.env.JWT_SECRET;
+        // Verifica la sesion y token de usuario y trae los datos del usuario
+        const { user, error, status } = await getUserSession(req);
 
-        if (!jwtSecret) {
-            throw new Error('JWT_SECRET is not defined');
+        if (error) {
+            return NextResponse.json({ error }, { status });
         }
 
-        // Obtiene el token
-        const authHeader = req.headers.get('Authorization');
-        if (!authHeader || !authHeader.startsWith('Bearer ')) {
-            return NextResponse.json({ error: "Token not provided" }, { status: 401 });
-        }
-
-        // Decodifica el token
-        const token = authHeader.split(' ')[1];
-
-        let decodedToken;
-        try {
-            decodedToken = verify(token, jwtSecret);
-        } catch (error) {
-            return NextResponse.json({ error: "Invalid token" }, { status: 401 });
-        }
-
-        if (!decodedToken || typeof decodedToken !== 'object' || !decodedToken.userId) {
-            return NextResponse.json({ error: "Invalid token" }, { status: 401 });
-        }
-
-        // Obtener ID del usuario
-        const userId = decodedToken.userId;
-
-        // Verificar la sesion del usuario
-        const session = await prisma.session.findFirst({
-            where: {
-                sessionToken: token,
-            },
-        });
-
-        if (!session) {
-            return NextResponse.json({ error: "Session not found" }, { status: 404 });
-        }
-
-        const existingUserId = await getUserById(userId)
-
-        if (!existingUserId) {
-            return NextResponse.json({ error: "User not found" }, { status: 404 });
-        }
-
-        // Verifica si la sesion expiro
-        const currentTime = new Date();
-        if (session.expires < currentTime) {
-            return NextResponse.json({ error: "Session expired" }, { status: 401 });
-        }
+        // Obtener Id del usuario
+        const userId = user?.id;
 
         // verificar el rol del usuario para acceder a la ruta
-        if (!existingUserId || existingUserId.role !== Role.ADMIN) {
+        if (!user || user.role !== Role.ADMIN) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
         }
 
@@ -192,60 +107,18 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
 
 export async function DELETE(req: Request, { params }: { params: { id: string } }) {
     try {
-        const jwtSecret = process.env.JWT_SECRET;
+        // Verifica la sesion y token de usuario y trae los datos del usuario
+        const { user, error, status } = await getUserSession(req);
 
-        if (!jwtSecret) {
-            throw new Error('JWT_SECRET is not defined');
+        if (error) {
+            return NextResponse.json({ error }, { status });
         }
 
-        // Obtiene el token
-        const authHeader = req.headers.get('Authorization');
-        if (!authHeader || !authHeader.startsWith('Bearer ')) {
-            return NextResponse.json({ error: "Token not provided" }, { status: 401 });
-        }
-
-        // Decodifica el token
-        const token = authHeader.split(' ')[1];
-
-        let decodedToken;
-        try {
-            decodedToken = verify(token, jwtSecret);
-        } catch (error) {
-            return NextResponse.json({ error: "Invalid token" }, { status: 401 });
-        }
-
-        if (!decodedToken || typeof decodedToken !== 'object' || !decodedToken.userId) {
-            return NextResponse.json({ error: "Invalid token" }, { status: 401 });
-        }
-
-        // Obtener ID del usuario
-        const userId = decodedToken.userId;
-
-        // Verificar la sesion del usuario
-        const session = await prisma.session.findFirst({
-            where: {
-                sessionToken: token,
-            },
-        });
-
-        if (!session) {
-            return NextResponse.json({ error: "Session not found" }, { status: 404 });
-        }
-
-        const existingUserId = await getUserById(userId)
-
-        if (!existingUserId) {
-            return NextResponse.json({ error: "User not found" }, { status: 404 });
-        }
-
-        // Verifica si la sesion expiro
-        const currentTime = new Date();
-        if (session.expires < currentTime) {
-            return NextResponse.json({ error: "Session expired" }, { status: 401 });
-        }
+        // Obtener Id del usuario
+        const userId = user?.id;
 
         // verificar el rol del usuario para acceder a la ruta
-        if (!existingUserId || existingUserId.role !== Role.ADMIN) {
+        if (!user || user.role !== Role.ADMIN) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
         }
 
