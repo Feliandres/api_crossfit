@@ -60,6 +60,7 @@ model Member {
 model Attendance {
   id        Int       @id @default(autoincrement())
   date      DateTime  @db.Timestamp(6)
+  status    Boolean   @db.Boolean() @default(true)
   createdAt DateTime  @default(now()) @map("created_at")
   memberId  Int       @map("member_id")
   updatedAt DateTime? @updatedAt @map("updated_at")
@@ -69,12 +70,14 @@ model Attendance {
 }
 
 model Pay {
-  id        Int       @id @default(autoincrement())
-  date      DateTime  @db.Date
-  createdAt DateTime  @default(now()) @map("created_at")
-  memberId  Int       @map("member_id")
-  updatedAt DateTime? @updatedAt @map("updated_at")
-  Member    Member    @relation(fields: [memberId], references: [id])
+  id           Int          @id @default(autoincrement())
+  date         DateTime     @db.Date
+  status       Boolean      @default(true) @db.Boolean()
+  payment_type Payment_Type
+  createdAt    DateTime     @default(now()) @map("created_at")
+  memberId     Int          @map("member_id")
+  updatedAt    DateTime?    @updatedAt @map("updated_at")
+  Member       Member       @relation(fields: [memberId], references: [id])
 
   @@map("pays")
 }
@@ -149,4 +152,10 @@ enum Gender {
 enum Nacionality {
   Ecuatoriano
   Extranjero
+}
+
+enum Payment_Type {
+  Efectivo
+  Tarjeta
+  Transferencia
 }
