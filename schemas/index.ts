@@ -31,15 +31,20 @@ export const updateMemberSchema = z.object({
     }).regex(/^[0-9]+$/, {
         message: "Emergency phone must contain only numbers"
     }).optional(),
-    born_date: z.date({
+    born_date: z.preprocess((arg) => {
+        if (typeof arg === "string" || arg instanceof Date) {
+            return new Date(arg);
+        }
+        return arg;
+    }, z.date({
         message: "Date is required"
-    }).optional(),
+    })).optional(),
     direction: z.string().min(12,{
         message: "Mininum 12 characters"
     }).optional(),
     gender: GenderEnum.optional(),
     nacionality: NacionalityEnum.optional(),
-    plan: z.number().optional()
+    planId: z.number().optional()
 })
 
 export const MemberSchema = z.object({
@@ -67,15 +72,20 @@ export const MemberSchema = z.object({
     }).regex(/^[0-9]+$/, {
         message: "Emergency phone must contain only numbers"
     }),
-    born_date: z.date({
+    born_date: z.preprocess((arg) => {
+        if (typeof arg === "string" || arg instanceof Date) {
+            return new Date(arg);
+        }
+        return arg;
+    }, z.date({
         message: "Date is required"
-    }),
+    })),
     direction: z.string().min(12,{
         message: "Mininum 12 characters"
     }),
     gender: GenderEnum,
     nacionality: NacionalityEnum,
-    plan: z.number().optional()
+    planId: z.number().optional()
 })
 
 export const UpdatePlanSchema = z.object({
@@ -150,31 +160,51 @@ export const RegisterSchema = z.object({
 });
 
 export const AttendanceSchema = z.object({
-    date: z.date({
-        message: "Date format"
-    }),
+    date: z.preprocess((arg) => {
+        if (typeof arg === "string" || arg instanceof Date) {
+            return new Date(arg);
+        }
+        return arg;
+    }, z.date({
+        message: "Date is required"
+    })),
 })
 
 export const UpdateAttendanceSchema = z.object({
-    date: z.date({
-        message: "Date format"
-    }).optional(),
+    date: z.preprocess((arg) => {
+        if (typeof arg === "string" || arg instanceof Date) {
+            return new Date(arg);
+        }
+        return arg;
+    }, z.date({
+        message: "Date is required"
+    })).optional(),
     status: z.boolean({
         message: "true or false"
     }).optional(),
 })
 
 export const PaySchema = z.object({
-    date: z.date({
-        message: "Date format"
-    }),
+    date: z.preprocess((arg) => {
+        if (typeof arg === "string" || arg instanceof Date) {
+            return new Date(arg);
+        }
+        return arg;
+    }, z.date({
+        message: "Date is required"
+    })),
     payment_type: PaymentTypeEnum,
 })
 
 export const UpdatePaySchema = z.object({
-    date: z.date({
-        message: "Date format"
-    }).optional(),
+    date: z.preprocess((arg) => {
+        if (typeof arg === "string" || arg instanceof Date) {
+            return new Date(arg);
+        }
+        return arg;
+    }, z.date({
+        message: "Date is required"
+    })).optional(),
     status: z.boolean({
         message: "true or false"
     }).optional(),

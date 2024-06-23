@@ -28,7 +28,12 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
 
         // Retorna el plan por id
         const getMember = await prisma.member.findUnique({
-            where: {id: idMember}
+            where: {
+                id: idMember
+            },
+            include: {
+                plan: true,
+            }
         });
 
 
@@ -69,16 +74,15 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
         // Validar datos con zod
         const validatedMember = updateMemberSchema.parse(await req.json());
 
-        let planValidated;
 
-        if (validatedMember.plan !== undefined) {
-            const existingPlan = await getPlanById(validatedMember.plan)
+        // Validar si el id del plan es válido
+        if (validatedMember.planId !== undefined) {
+            const existingPlan = await getPlanById(validatedMember.planId)
 
             if (!existingPlan) {
                 return NextResponse.json({ error: "Invalid plan ID" }, { status: 400 });
             }
 
-            planValidated = { connect: { id: validatedMember.plan } };
         }
 
         // Actualizar la membresia
@@ -86,7 +90,9 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
             where: { id: idMember},
             data: {
                 ...validatedMember,
-                plan: planValidated
+            },
+            include:{
+                plan: true
             }
         })
 
@@ -138,7 +144,10 @@ export async function DELETE(req: Request, { params }: { params: { id: string } 
             where: { id: idMember },
             data: {
                 status: false,
-            }
+            },
+            include:{
+                plan: true
+            },
         })
 
         return NextResponse.json({

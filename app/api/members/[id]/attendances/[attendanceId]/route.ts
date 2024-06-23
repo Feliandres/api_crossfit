@@ -27,7 +27,14 @@ export async function GET(req: Request, { params: { id, attendanceId } }: { para
             where: {
                 id: Number(attendanceId),
                 memberId: Number(id),
-            }
+            },
+            include: {
+                Member: {
+                    include: {
+                        plan: true,  // Incluir la información del plan del miembro
+                    },
+                },
+            },
         });
 
         if (!getAttendance) {
@@ -76,7 +83,14 @@ export async function PUT(req: Request, { params: { id, attendanceId } }: { para
             },
             data: {
                 ...validatedAttendance,
-            }
+            },
+            include: {
+                Member: {
+                    include: {
+                        plan: true,  // Incluir la información del plan del miembro
+                    },
+                },
+            },
         });
 
         return NextResponse.json({
@@ -121,7 +135,14 @@ export async function DELETE(req: Request, { params: { id, attendanceId } }: { p
             },
             data: {
                 status: false
-            }
+            },
+            include: {
+                Member: {
+                    include: {
+                        plan: true,  // Incluir la información del plan del miembro
+                    },
+                },
+            },
         });
 
         if (!deletedAttendance) {

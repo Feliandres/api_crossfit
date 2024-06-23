@@ -60,3 +60,18 @@ export async function getUserSession(req: Request) {
 
     return { user: existingUser, token, status: 200 };
 }
+
+// Función auxiliar para obtener y verificar la sesión del usuario
+export async function getSessionAndValidateRole(req: Request) {
+    const { user, token, error, status } = await getUserSession(req);
+
+    if (error) {
+        return { error, status };
+    }
+
+    if (!user) {
+        return { error: "Unauthorized", status: 403 };
+    }
+
+    return { user, token, status: 200 };
+}

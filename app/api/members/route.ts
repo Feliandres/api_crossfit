@@ -5,46 +5,63 @@ import { MemberSchema} from "@/schemas";
 import { ZodError } from "zod";
 import { getMemberByEmail } from "@/data/member";
 import { getPlanById } from "@/data/plan";
-import { getUserSession } from "@/data/session";
+import { getSessionAndValidateRole, getUserSession } from "@/data/session";
 
 export async function GET(req: Request) {
     try {
-        // Verifica la sesion y token de usuario y trae los datos del usuario
-        const { user, error, status } = await getUserSession(req);
+        // Obtener y validar la sesión del usuario
+        const { user, error, status } = await getSessionAndValidateRole(req);
 
         if (error) {
             return NextResponse.json({ error }, { status });
         }
 
-        // Obtener Id del usuario
-        const userId = user?.id;
-
-        // verificar el rol del usuario para acceder a la ruta
-        if (!user || user.role !== Role.ADMIN) {
+        // Verificación adicional para asegurar que user no es null o undefined
+        if (!user) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
         }
 
-        // Obtener los parámetros de búsqueda de la URL
-        const url = new URL(req.url);
-        const skip = parseInt(url.searchParams.get("skip") || "0", 10);
-        const take = parseInt(url.searchParams.get("take") || "10", 10);
+        if (user.role === Role.USER) {
+            // Lógica específica para usuarios con rol USER
+            const member = await prisma.member.findUnique({
+                where: {
+                    email: user.email,
+                },
+            });
 
-        // Retorna todas las membresias de la base de datos con o sin paginación
-        const members = await prisma.member.findMany({
-            //skip: skip,
-            //take: take,
-        });
+            if (!member) {
+                return NextResponse.json({ error: "No membership found for this user" }, { status: 404 });
+            }
 
+            return NextResponse.json({
+                success: "Member retrieved successfully",
+                member: {
+                    ...member,
+                },
+            }, { status: 200 });
 
-        return NextResponse.json({
-            success: "Return members successfully",
-            member: {
-                ...members
-            },
-        }, { status: 200 });
+        } else if (user.role === Role.ADMIN) {
+            // Lógica específica para usuarios con rol ADMIN
+            const url = new URL(req.url);
+            const skip = parseInt(url.searchParams.get("skip") || "0", 10);
+            const take = parseInt(url.searchParams.get("take") || "10", 10);
+
+            const members = await prisma.member.findMany({
+                include: {
+                    plan: true,
+                }
+            });
+
+            return NextResponse.json({
+                success: "Members retrieved successfully",
+                members: members,
+            }, { status: 200 });
+        } else {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+        }
 
     } catch (error) {
-        return NextResponse.json({ error: "Unexpected error"}, { status: 500 });
+        return NextResponse.json({ error: "Unexpected error" }, { status: 500 });
     }
 }
 
@@ -70,16 +87,14 @@ export async function POST(req: Request) {
         // Validación con Zod
         const validatedMember = MemberSchema.parse(await req.json());
 
-        let planValidated;
-
-        if (validatedMember.plan !== undefined) {
-            const existingPlan = await getPlanById(validatedMember.plan)
+        // Validar si el id del plan es válido
+        if (validatedMember.planId !== undefined) {
+            const existingPlan = await getPlanById(validatedMember.planId)
 
             if (!existingPlan) {
                 return NextResponse.json({ error: "Invalid plan ID" }, { status: 400 });
             }
 
-            planValidated = { connect: { id: validatedMember.plan } };
         }
 
         // Verifica si el miembro ya existe
@@ -92,7 +107,10 @@ export async function POST(req: Request) {
         const createdMember = await prisma.member.create({
             data: {
                 ...validatedMember,
-                plan: planValidated
+                //planId: Number(planValidated)
+            },
+            include: {
+                plan: true,
             }
         });
 

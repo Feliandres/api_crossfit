@@ -22,17 +22,17 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
             return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
         }
 
-        // id del plan que se va actualizar
+        // id del usuario que se va actualizar
         const idUser = params.id;
 
-        // Retorna el plan por id
+        // Retorna el usuario por id
         const getUser = await prisma.user.findUnique({
             where: {id: idUser}
         });
 
 
         return NextResponse.json({
-            success: "Return plan successfully",
+            success: "Return user successfully",
             plan: {
                 ...getUser
             },

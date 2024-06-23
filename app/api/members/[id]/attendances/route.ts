@@ -33,7 +33,14 @@ export async function GET(req: Request,{ params }: { params: { id: string }}) {
             //take: take,
             where: {
                 memberId: Number(params.id)
-            }
+            },
+            include: {
+                Member: {
+                    include: {
+                        plan: true,  // Incluir la información del plan del miembro
+                    },
+                },
+            },
         });
 
 
@@ -76,7 +83,14 @@ export async function POST(req: Request,{ params }: { params: { id: string }}) {
             data: {
                 ...validatedAttendance,
                 memberId: Number(params.id),
-            }
+            },
+            include: {
+                Member: {
+                    include: {
+                        plan: true,  // Incluir la información del plan del miembro
+                    },
+                },
+            },
         });
 
         return NextResponse.json({
