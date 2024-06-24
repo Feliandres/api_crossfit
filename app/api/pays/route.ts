@@ -29,7 +29,7 @@ export async function GET(req: Request) {
                 return NextResponse.json({ error: "No membership found for this user" }, { status: 404 });
             }
 
-            const attendance = await prisma.attendance.findMany({
+            const pay = await prisma.pay.findMany({
                 where: {
                     memberId: member.id
                 },
@@ -43,9 +43,9 @@ export async function GET(req: Request) {
             })
 
             return NextResponse.json({
-                success: "Attendance retrieved successfully",
-                attendance: {
-                    ...attendance,
+                success: "Pay retrieved successfully",
+                pay: {
+                    ...pay,
                 },
             }, { status: 200 });
 
@@ -55,7 +55,7 @@ export async function GET(req: Request) {
             const skip = parseInt(url.searchParams.get("skip") || "0", 10);
             const take = parseInt(url.searchParams.get("take") || "10", 10);
 
-            const attendances = await prisma.attendance.findMany({
+            const pays = await prisma.pay.findMany({
                 include: {
                     Member: {
                         include: {
@@ -66,8 +66,8 @@ export async function GET(req: Request) {
             });
 
             return NextResponse.json({
-                success: "Attendances retrieved successfully",
-                attendance: attendances,
+                success: "Pays retrieved successfully",
+                pay: pays,
             }, { status: 200 });
         } else {
             return NextResponse.json({ error: "Unauthorized" }, { status: 403 });

@@ -60,7 +60,7 @@ model Member {
 model Attendance {
   id        Int       @id @default(autoincrement())
   date      DateTime  @db.Timestamp(6)
-  status    Boolean   @db.Boolean() @default(true)
+  status    Boolean   @default(true) @db.Boolean()
   createdAt DateTime  @default(now()) @map("created_at")
   memberId  Int       @map("member_id")
   updatedAt DateTime? @updatedAt @map("updated_at")
@@ -158,4 +158,26 @@ enum Payment_Type {
   Efectivo
   Tarjeta
   Transferencia
+}
+
+// Vistas
+
+model MemberPaymentInfo {
+  id                    Int       @id
+  member_id             Int
+  member_identification String
+  member_name           String
+  member_lastname       String
+  member_email          String
+  member_phone          String
+  plan_id               Int
+  plan_name             String
+  plan_price            Decimal
+  plan_duration         Int
+  first_payment_date    DateTime?
+  last_payment_date     DateTime?
+  next_payment_date     DateTime?
+  days_remaining        Int?
+
+  @@map("member_payment_info")
 }

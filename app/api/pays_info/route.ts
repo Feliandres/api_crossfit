@@ -29,23 +29,16 @@ export async function GET(req: Request) {
                 return NextResponse.json({ error: "No membership found for this user" }, { status: 404 });
             }
 
-            const attendance = await prisma.attendance.findMany({
+            const pay_info = await prisma.memberPaymentInfo.findMany({
                 where: {
-                    memberId: member.id
-                },
-                include: {
-                    Member: {
-                        include: {
-                            plan: true,  // Incluir la información del plan del miembro
-                        },
-                    },
+                    member_id: member.id
                 },
             })
 
             return NextResponse.json({
-                success: "Attendance retrieved successfully",
-                attendance: {
-                    ...attendance,
+                success: "Pay info retrieved successfully",
+                pay: {
+                    ...pay_info,
                 },
             }, { status: 200 });
 
@@ -55,19 +48,14 @@ export async function GET(req: Request) {
             const skip = parseInt(url.searchParams.get("skip") || "0", 10);
             const take = parseInt(url.searchParams.get("take") || "10", 10);
 
-            const attendances = await prisma.attendance.findMany({
-                include: {
-                    Member: {
-                        include: {
-                            plan: true,  // Incluir la información del plan del miembro
-                        },
-                    },
-                },
+            const pays_info = await prisma.memberPaymentInfo.findMany({
+                //
+                //
             });
 
             return NextResponse.json({
-                success: "Attendances retrieved successfully",
-                attendance: attendances,
+                success: "Pays info retrieved successfully",
+                pay: pays_info,
             }, { status: 200 });
         } else {
             return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
