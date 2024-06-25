@@ -1,10 +1,11 @@
-import { Gender, Nacionality, Payment_Type } from "@prisma/client";
+import { Gender, Nacionality, Payment_Type, Role } from "@prisma/client";
 import * as z from "zod";
 
 // Definición de los enums para la validación
 const GenderEnum = z.enum([Gender.M, Gender.F]);
 const NacionalityEnum = z.enum([Nacionality.Ecuatoriano, Nacionality.Extranjero]);
 const PaymentTypeEnum = z.enum([Payment_Type.Efectivo, Payment_Type.Tarjeta, Payment_Type.Transferencia]);
+const RoleEnum = z.enum([Role.ADMIN, Role.TRAINER, Role.USER]);
 
 export const updateMemberSchema = z.object({
     identification: z.string().min(10,{
@@ -123,7 +124,17 @@ export const SettingsSchema = z.object({
     email: z.optional(z.string().email({
         message: "Email is required"
     })),
-    image: z.optional(z.string())
+    image: z.optional(z.string()),
+});
+
+export const UpdateUserSchema = z.object({
+    name: z.optional(z.string()),
+    email: z.optional(z.string().email({
+        message: "Email is required"
+    })),
+    image: z.optional(z.string()),
+    status: z.boolean().optional(),
+    role: RoleEnum.optional(),
 });
 
 export const ResetSchema = z.object({

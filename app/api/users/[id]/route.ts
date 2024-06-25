@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { ZodError } from "zod";
-import { SettingsSchema } from "@/schemas";
+import { UpdateUserSchema } from "@/schemas";
 import { Role } from "@prisma/client";
 import { getUserSession } from "@/data/session";
 
@@ -66,7 +66,7 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
         const idUser = params.id;
 
         // Validar datos con zod
-        const validatedUser = SettingsSchema.parse(await req.json());
+        const validatedUser = UpdateUserSchema.parse(await req.json());
 
         // Actualizar el usuario
         const updatedUser = await prisma.user.update({
