@@ -45,7 +45,8 @@ export const updateMemberSchema = z.object({
     }).optional(),
     gender: GenderEnum.optional(),
     nacionality: NacionalityEnum.optional(),
-    planId: z.number().optional()
+    planId: z.number().optional(),
+    status: z.boolean().optional(),
 })
 
 export const MemberSchema = z.object({
