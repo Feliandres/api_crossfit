@@ -33,7 +33,7 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
 
         return NextResponse.json({
             success: "Return user successfully",
-            plan: {
+            user: {
                 ...getUser
             },
         }, { status: 200 });
