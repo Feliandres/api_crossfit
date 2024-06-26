@@ -49,7 +49,7 @@ export async function GET(req: Request) {
                 },
             }, { status: 200 });
 
-        } else if (user.role === Role.ADMIN || user.role === Role.TRAINER) {
+        } else if (user.role === Role.ADMIN) {
             // Lógica específica para usuarios con rol ADMIN
             const url = new URL(req.url);
             const skip = parseInt(url.searchParams.get("skip") || "0", 10);
