@@ -33,8 +33,11 @@ export async function GET(req: Request) {
 
         // Retorna todos los usuarios de la base de datos con o sin paginación
         const users = await prisma.user.findMany({
-            //skip: skip,
-            //take: take,
+            where: {
+                id: {
+                    not: userId
+                }
+            }
         });
 
 

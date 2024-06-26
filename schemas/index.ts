@@ -46,7 +46,9 @@ export const updateMemberSchema = z.object({
     gender: GenderEnum.optional(),
     nacionality: NacionalityEnum.optional(),
     planId: z.number().optional(),
-    status: z.boolean().optional(),
+    status: z.boolean().refine((val) => val === true, {
+        message: "Status can only be set to true"
+    }).optional(),
 })
 
 export const MemberSchema = z.object({
@@ -134,7 +136,9 @@ export const UpdateUserSchema = z.object({
         message: "Email is required"
     })),
     image: z.optional(z.string()),
-    status: z.boolean().optional(),
+    status: z.boolean().refine((val) => val === true, {
+        message: "Status can only be set to true"
+    }).optional(),
     role: RoleEnum.optional(),
 });
 
@@ -191,8 +195,8 @@ export const UpdateAttendanceSchema = z.object({
     }, z.date({
         message: "Date is required"
     })).optional(),
-    status: z.boolean({
-        message: "true or false"
+    status: z.boolean().refine((val) => val === true, {
+        message: "Status can only be set to true"
     }).optional(),
 })
 
@@ -217,8 +221,8 @@ export const UpdatePaySchema = z.object({
     }, z.date({
         message: "Date is required"
     })).optional(),
-    status: z.boolean({
-        message: "true or false"
+    status: z.boolean().refine((val) => val === true, {
+        message: "Status can only be set to true"
     }).optional(),
     payment_type: PaymentTypeEnum.optional(),
 })
