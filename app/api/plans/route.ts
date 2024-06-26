@@ -19,7 +19,7 @@ export async function GET(req: Request) {
         const userId = user?.id;
 
         // verificar el rol del usuario para acceder a la ruta
-        if (!user || user.role !== Role.ADMIN) {
+        if (!user ) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
         }
 
