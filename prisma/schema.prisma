@@ -181,3 +181,83 @@ model MemberPaymentInfo {
 
   @@map("member_payment_info")
 }
+model TotalEarnings {
+  id             Int      @id
+  total_earnings Decimal
+  @@map("total_earnings")
+}
+
+model AnnualEarnings {
+  id             Int      @id
+  year           Int
+  annual_earnings Decimal
+  @@map("annual_earnings")
+}
+
+model MonthlyEarnings {
+  id             Int      @id
+  year           Int
+  month          Int
+  monthly_earnings Decimal
+  @@map("monthly_earnings")
+}
+
+model EarningsByPlan {
+  id             Int      @id
+  plan_name      String
+  earnings       Decimal
+  @@map("earnings_by_plan")
+}
+
+model TotalAttendances {
+  id             Int      @id
+  total_attendances Int
+  @@map("total_attendances")
+}
+
+model AttendancesByGender {
+  id             Int      @id
+  gender         Gender
+  total_attendances Int
+  @@map("attendances_by_gender")
+}
+
+model AnnualAttendances {
+  id             Int      @id
+  year           Int
+  annual_attendances Int
+  @@map("annual_attendances")
+}
+
+model MonthlyAttendances {
+  id             Int      @id
+  year           Int
+  month          Int
+  monthly_attendances Int
+  @@map("monthly_attendances")
+}
+
+model DailyAttendances {
+  id             Int      @id
+  day            DateTime
+  daily_attendances Int
+  @@map("daily_attendances")
+}
+
+model TotalMemberships {
+  id             Int      @id
+  total_memberships Int
+  @@map("total_memberships")
+}
+
+model ActiveMemberships {
+  id             Int      @id
+  active_memberships Int
+  @@map("active_memberships")
+}
+
+model InactiveMemberships {
+  id             Int      @id
+  inactive_memberships Int
+  @@map("inactive_memberships")
+}
