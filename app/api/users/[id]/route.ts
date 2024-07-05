@@ -111,24 +111,27 @@ export async function DELETE(req: Request, { params }: { params: { id: string } 
         // id del usuario que se va actualizar
         const idUser = params.id;
 
-        // Verifica el status del usuario
-        const verificationStatus = await prisma.user.findFirst({
-            where: { id: idUser}
-        })
+         // Verifica el status del usuario
+         const verificationStatus = await prisma.user.findFirst({
+            where: { id: idUser }
+        });
 
-        if ( verificationStatus?.status === false) {
-            return NextResponse.json({ error: "User already deleted" }, { status: 401 });
+        if (!verificationStatus) {
+            return NextResponse.json({ error: "User not found" }, { status: 404 });
         }
+
+        // Alterna el estado del usuario
+        const newStatus = !verificationStatus.status;
 
         const deletedUser = await prisma.user.update({
             where: { id: idUser },
             data: {
-                status: false,
+                status: newStatus,
             }
-        })
+        });
 
         return NextResponse.json({
-            success: "User deleted successfully",
+            success: `User ${newStatus ? 'activated' : 'desactivated'} successfully`,
             user: deletedUser,
         }, { status: 200 });
 

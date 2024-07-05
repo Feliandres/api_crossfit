@@ -128,13 +128,10 @@ export async function DELETE(req: Request, { params: { id, attendanceId } }: { p
         }
 
         // Eliminar la asistencia por id
-        const deletedAttendance = await prisma.attendance.update({
+        const deletedAttendance = await prisma.attendance.delete({
             where: {
                 id: Number(attendanceId),
                 memberId: Number(id),
-            },
-            data: {
-                status: false
             },
             include: {
                 Member: {

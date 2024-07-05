@@ -127,14 +127,25 @@ export async function DELETE(req: Request, { params: { id, payId } }: { params: 
             return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
         }
 
-        // Eliminar pago por id
-        const deletedPay = await prisma.pay.update({
+        // Verifica el estado del pago
+        const verificationStatus = await prisma.pay.findFirst({
+            where: { id: Number(payId), memberId: Number(id) }
+        });
+
+        if (!verificationStatus) {
+            return NextResponse.json({ error: "Pay not found" }, { status: 404 });
+        }
+
+        // Alterna el estado del pago
+        const newStatus = !verificationStatus.status;
+
+        // Actualiza el estado del pago por id
+        const updatedPay = await prisma.pay.update({
             where: {
                 id: Number(payId),
-                memberId: Number(id),
             },
             data: {
-                status: false
+                status: newStatus,
             },
             include: {
                 Member: {
@@ -145,18 +156,14 @@ export async function DELETE(req: Request, { params: { id, payId } }: { params: 
             },
         });
 
-        if (!deletedPay) {
-            return NextResponse.json({ error: "Pay not found" }, { status: 404 });
-        }
-
         return NextResponse.json({
-            success: "Deleted pay successfully",
+            success: `Pay ${newStatus ? 'activated' : 'desactivated'} successfully`,
             plan: {
-                ...deletedPay
+                ...updatedPay
             },
         }, { status: 200 });
 
     } catch (error) {
-        return NextResponse.json({ error: "Unexpected error"}, { status: 500 });
+        return NextResponse.json({ error: "Unexpected error" }, { status: 500 });
     }
 }

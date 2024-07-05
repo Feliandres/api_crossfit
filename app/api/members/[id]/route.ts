@@ -136,14 +136,17 @@ export async function DELETE(req: Request, { params }: { params: { id: string } 
             where: { id: idMember}
         })
 
-        if ( verificationStatus?.status === false) {
-            return NextResponse.json({ error: "Member already deleted" }, { status: 401 });
+        if (!verificationStatus) {
+            return NextResponse.json({ error: "Member not found" }, { status: 404 });
         }
+
+        // Alterna el estado del usuario
+        const newStatus = !verificationStatus.status;
 
         const deletedMember = await prisma.member.update({
             where: { id: idMember },
             data: {
-                status: false,
+                status: newStatus,
             },
             include:{
                 plan: true
@@ -151,7 +154,7 @@ export async function DELETE(req: Request, { params }: { params: { id: string } 
         })
 
         return NextResponse.json({
-            success: "Member deleted successfully",
+            success: `Member ${newStatus ? 'activated' : 'desactivated'} successfully`,
             member: deletedMember,
         }, { status: 200 });
 
