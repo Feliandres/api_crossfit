@@ -11,7 +11,7 @@ export async function GET(req: Request) {
         }
 
         return NextResponse.json({
-            succcess: "Valid session",
+            success: "Valid session",
             user,
             token,
         }, { status: 200 });
