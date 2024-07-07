@@ -24,7 +24,7 @@ export async function GET(req: Request) {
             })
 
             return NextResponse.json({
-                success: "Pay info retrieved successfully",
+                success: "Montly attendances retrieved successfully",
                 monthly_attendance: {
                     ...monthly_attendances,
                 },
