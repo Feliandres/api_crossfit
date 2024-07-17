@@ -39,6 +39,7 @@ export async function POST(req: Request) {
         data: {
             emailVerified: new Date(),
             email: existingToken.email,
+            status: true,
         }
     });
 

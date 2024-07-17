@@ -8,9 +8,6 @@ import { ZodError } from "zod";
 import { prisma } from "@/lib/prisma";
 import { sign } from 'jsonwebtoken';
 
-
-
-
 export async function POST(req: Request) {
     try {
 
@@ -27,6 +24,11 @@ export async function POST(req: Request) {
 
         if (!existingUser || !existingUser.email || !existingUser.password) {
             return NextResponse.json({ error: "Email does not exist" }, { status: 404 });
+        }
+
+        // Verificar si el usuario tiene status false
+        if (existingUser.status === false) {
+            return NextResponse.json({ error: "El usuario no ha confirmado su correo electrónico" }, { status: 401 });
         }
 
         if (!existingUser.emailVerified) {
