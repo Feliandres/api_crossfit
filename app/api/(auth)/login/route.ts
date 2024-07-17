@@ -27,8 +27,8 @@ export async function POST(req: Request) {
         }
 
         // Verificar si el usuario tiene status false
-        if (existingUser.status === false) {
-            return NextResponse.json({ error: "El usuario no ha confirmado su correo electrónico" }, { status: 401 });
+        if (existingUser.status === false || existingUser.emailVerified === null) {
+            return NextResponse.json({ error: "User is desactivated or not confirmated" }, { status: 401 });
         }
 
         if (!existingUser.emailVerified) {
