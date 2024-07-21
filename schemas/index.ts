@@ -185,10 +185,10 @@ export const UpdateAttendanceSchema = z.object({
         if (typeof arg === "string" || arg instanceof Date) {
             return new Date(arg);
         }
-        return arg;
+        return undefined; // Devolver undefined si no es una fecha válida
     }, z.date({
         message: "Date is required"
-    })).optional(),
+    }).optional()), // Hacer el campo opcional solo si es necesario
     status: z.boolean().optional(),
 })
 

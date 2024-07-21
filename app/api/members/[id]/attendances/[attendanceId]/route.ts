@@ -55,9 +55,9 @@ export async function GET(req: Request, { params: { id, attendanceId } }: { para
 
 //
 
-export async function PUT(req: Request, { params: { id, attendanceId } }: { params: { id: string; attendanceId: string }}) {
+export async function PUT(req: Request, { params: { id, attendanceId } }: { params: { id: string; attendanceId: string } }) {
     try {
-        // Verifica la sesion y token de usuario y trae los datos del usuario
+        // Verifica la sesión y token de usuario y trae los datos del usuario
         const { user, error, status } = await getUserSession(req);
 
         if (error) {
@@ -67,7 +67,7 @@ export async function PUT(req: Request, { params: { id, attendanceId } }: { para
         // Obtener Id del usuario
         const userId = user?.id;
 
-        // verificar el rol del usuario para acceder a la ruta
+        // Verificar el rol del usuario para acceder a la ruta
         if (!user || user.role !== Role.ADMIN) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
         }
@@ -75,11 +75,48 @@ export async function PUT(req: Request, { params: { id, attendanceId } }: { para
         // Valida los datos con Zod
         const validatedAttendance = UpdateAttendanceSchema.parse(await req.json());
 
-        // Actualizar Asistencia por id
+        // Obtener información del miembro
+        const member = await prisma.member.findUnique({
+            where: {
+                id: Number(id),
+            },
+        });
+
+        if (!member) {
+            return NextResponse.json({ error: "Member not found" }, { status: 404 });
+        }
+
+        // Obtener la asistencia a actualizar
+        const existingAttendance = await prisma.attendance.findUnique({
+            where: {
+                id: Number(attendanceId),
+            },
+        });
+
+        if (!existingAttendance) {
+            return NextResponse.json({ error: "Attendance not found" }, { status: 404 });
+        }
+
+        // Validar la fecha de la asistencia
+        const currentDate = new Date();
+        const attendanceDate = validatedAttendance.date;
+
+        if (!attendanceDate) {
+            return NextResponse.json({ error: "Date is required" }, { status: 400 });
+        }
+
+        if (attendanceDate > currentDate) {
+            return NextResponse.json({ error: "Attendance date cannot be in the future" }, { status: 400 });
+        }
+
+        if (attendanceDate < member.inscription_date) {
+            return NextResponse.json({ error: "Attendance date cannot be before the member's inscription date" }, { status: 400 });
+        }
+
+        // Actualizar Asistencia
         const updatedAttendance = await prisma.attendance.update({
             where: {
                 id: Number(attendanceId),
-                memberId: Number(id)
             },
             data: {
                 ...validatedAttendance,
@@ -96,7 +133,7 @@ export async function PUT(req: Request, { params: { id, attendanceId } }: { para
         return NextResponse.json({
             success: "Attendance updated successfully",
             attendance: {
-                ...updatedAttendance
+                ...updatedAttendance,
             },
         }, { status: 200 });
 
@@ -104,7 +141,10 @@ export async function PUT(req: Request, { params: { id, attendanceId } }: { para
         if (error instanceof ZodError) {
             return NextResponse.json({ error: "Invalid fields", details: error.errors }, { status: 400 });
         }
-        return NextResponse.json({ error: "Unexpected error"}, { status: 500 });
+        if (error instanceof Error) {
+            return NextResponse.json({ error: "Unexpected error", details: error.message }, { status: 500 });
+        }
+        return NextResponse.json({ error: "Unexpected error" }, { status: 500 });
     }
 }
 

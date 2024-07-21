@@ -78,6 +78,29 @@ export async function POST(req: Request,{ params }: { params: { id: string }}) {
         // Validación con Zod
         const validatedAttendance = AttendanceSchema.parse(await req.json());
 
+        // Obtener información del miembro
+        const member = await prisma.member.findUnique({
+            where: {
+                id: Number(params.id),
+            },
+        });
+
+        if (!member) {
+            return NextResponse.json({ error: "Member not found" }, { status: 404 });
+        }
+
+        // Validar la fecha de la asistencia
+        const currentDate = new Date();
+        const attendanceDate = new Date(validatedAttendance.date);
+
+        if (attendanceDate > currentDate) {
+            return NextResponse.json({ error: "Attendance date cannot be in the future" }, { status: 400 });
+        }
+
+        if (attendanceDate < member.inscription_date) {
+            return NextResponse.json({ error: "Attendance date cannot be before the member's inscription date" }, { status: 400 });
+        }
+
         // Crear Asistencia
         const createdAttendance = await prisma.attendance.create({
             data: {
