@@ -13,7 +13,7 @@ const transporter = nodemailer.createTransport({
 
 // Función para enviar correo de verificación
 export const sendVerificationEmail = async (email: string, token: string) => {
-  const confirmLink = `https://api-crossfit.vercel.app/new-verification?token=${token}`;
+  const confirmLink = `http://localhost:3001/new-verification?token=${token}`;
 
   const mailOptions = {
     from: `crossfitquito110@gmail.com`, // dirección del remitente
