@@ -5,7 +5,7 @@ import { Role } from "@prisma/client";
 import { generateVerificationToken } from "@/data/tokens";
 import { sendVerificationEmail } from "@/data/mail";
 import bcrypt from "bcryptjs";
-import { RegisterSchema } from "@/schemas";
+import { CreateUserSchema, RegisterSchema } from "@/schemas";
 import { ZodError } from "zod";
 import { getUserSession } from "@/data/session";
 
@@ -73,7 +73,7 @@ export async function POST(req: Request) {
         }
 
         // Validación con Zod
-        const { name, email, password } = RegisterSchema.parse(await req.json());
+        const { name, email, password, role } = CreateUserSchema.parse(await req.json());
 
         // Hash de la contraseña
         const hashed_password = await bcrypt.hash(password, 12);
@@ -88,9 +88,10 @@ export async function POST(req: Request) {
         // Crear usuario en la base de datos
         const createdUser = await prisma.user.create({
             data: {
-                name,
+                name: name,
                 email: email,
                 password: hashed_password,
+                role: role,
             },
         });
 
