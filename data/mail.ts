@@ -13,7 +13,7 @@ const transporter = nodemailer.createTransport({
 
 // Función para enviar correo de verificación
 export const sendVerificationEmail = async (email: string, token: string) => {
-  const confirmLink = `http://localhost:3001/new-verification?token=${token}`;
+  const confirmLink = `http://localhost:3000/new-verification?token=${token}`;
 
   const mailOptions = {
     from: `crossfitquito110@gmail.com`, // dirección del remitente
@@ -32,7 +32,7 @@ export const sendVerificationEmail = async (email: string, token: string) => {
 
 // Función para enviar correo de reinicio de contraseña
 export const sendPasswordResetEmail = async (email: string, token: string) => {
-  const resetLink = `https://api-crossfit.vercel.app/new-password?token=${token}`;
+  const resetLink = `http://localhost:3000/new-password?token=${token}`;
 
   const mailOptions = {
     from: `crossfitquito110@gmail.com`, // dirección del remitente
