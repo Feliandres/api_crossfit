@@ -93,11 +93,21 @@ export async function POST(req: Request,{ params }: { params: { id: string }}) {
         const currentDate = new Date();
         const attendanceDate = new Date(validatedAttendance.date);
 
-        if (attendanceDate > currentDate) {
+        // Función para normalizar una fecha a medianoche
+        const normalizeDate = (date: Date) => {
+            return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+        };
+
+        // Normalizar las fechas
+        const normalizedCurrentDate = normalizeDate(currentDate);
+        const normalizedAttendanceDate = normalizeDate(attendanceDate);
+        const normalizedInscriptionDate = normalizeDate(member.inscriptionDate);
+
+        if (normalizedAttendanceDate > normalizedCurrentDate) {
             return NextResponse.json({ error: "Attendance date cannot be in the future" }, { status: 400 });
         }
 
-        if (attendanceDate < member.inscription_date) {
+        if (normalizedAttendanceDate < normalizedInscriptionDate) {
             return NextResponse.json({ error: "Attendance date cannot be before the member's inscription date" }, { status: 400 });
         }
 

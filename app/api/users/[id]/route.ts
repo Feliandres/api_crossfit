@@ -4,6 +4,10 @@ import { ZodError } from "zod";
 import { UpdateUserSchema } from "@/schemas";
 import { Role } from "@prisma/client";
 import { getUserSession } from "@/data/session";
+import { generateVerificationToken } from "@/data/tokens";
+import { sendVerificationEmail } from "@/data/mail";
+import { getUserByEmail } from "@/data/user";
+import bcrypt from "bcryptjs"
 
 export async function GET(req: Request, { params }: { params: { id: string } }) {
     try {
@@ -47,7 +51,7 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
 
 export async function PUT(req: Request, { params }: { params: { id: string } }) {
     try {
-        // Verifica la sesion y token de usuario y trae los datos del usuario
+        // Verifica la sesión y token del usuario y trae los datos del usuario
         const { user, error, status } = await getUserSession(req);
 
         if (error) {
@@ -56,28 +60,74 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
 
         // Obtener Id del usuario
         const userId = user?.id;
+        const userEmail = user?.email;
+        const userPassword = user?.password;
 
-        // verificar el rol del usuario para acceder a la ruta
+        // Verificar el rol del usuario para acceder a la ruta
         if (!user || user.role !== Role.ADMIN) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
         }
 
-        // id del usuario que se va actualizar
+        // Id del usuario que se va a actualizar
         const idUser = params.id;
 
         // Validar datos con zod
         const validatedUser = UpdateUserSchema.parse(await req.json());
 
-        // Actualizar el usuario
-        const updatedUser = await prisma.user.update({
-            where: { id: idUser},
-            data: {
-                ...validatedUser
+        // Verificar si el correo electrónico ya está en uso y actualizar
+        let emailChanged = null;
+        if (validatedUser.email) {
+            const existingUser = await getUserByEmail(validatedUser.email);
+
+            if (existingUser && existingUser.id !== idUser) {
+                return NextResponse.json({ error: "Email already in use" }, { status: 401 });
             }
-        })
+
+            if (userEmail !== validatedUser.email) {
+                // Actualiza emailVerified a false
+                await prisma.user.update({
+                    where: { id: idUser },
+                    data: { emailVerified: null },
+                });
+
+                // Generar y enviar token de verificación
+                const verificationToken = await generateVerificationToken(validatedUser.email);
+                await sendVerificationEmail(validatedUser.email, verificationToken.token);
+
+                emailChanged = null;
+            }
+        }
+
+        // Verificar y hashear la nueva contraseña si se proporciona
+        let hashedPassword: string | undefined;
+        if (validatedUser.password) {
+        
+            // Comparar la nueva contraseña con la actual
+            const isPasswordSame = userPassword && await bcrypt.compare(validatedUser.password, userPassword);
+
+            if (isPasswordSame) {
+                return NextResponse.json({ error: "New password cannot be the same as the current password" }, { status: 400 });
+            }
+
+            // Hashear la nueva contraseña si es diferente
+            hashedPassword = await bcrypt.hash(validatedUser.password, 12);
+        }
+
+
+
+        // Actualizar los datos del usuario en la base de datos
+        const updatedUser = await prisma.user.update({
+            where: { id: idUser },
+            data: {
+                email: validatedUser.email ?? undefined, // Solo actualizar si el email ha cambiado
+                password: hashedPassword ?? undefined, // Solo actualizar si se ha proporcionado una nueva contraseña
+                ...validatedUser // Actualizar otros datos del usuario
+            },
+        });
+
 
         return NextResponse.json({
-            success: "User updated successfully",
+            success: "User updated successfully. Please verify the new email address.",
             user: updatedUser,
         }, { status: 200 });
 
@@ -112,7 +162,7 @@ export async function DELETE(req: Request, { params }: { params: { id: string } 
         const idUser = params.id;
 
          // Verifica el status del usuario
-         const verificationStatus = await prisma.user.findFirst({
+        const verificationStatus = await prisma.user.findFirst({
             where: { id: idUser }
         });
 

@@ -21,11 +21,14 @@ export async function GET(req: Request) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
         }
 
-        if (user.role === Role.USER) {
-            // Lógica específica para usuarios con rol USER
+        if (user.role === Role.CUSTOMER) {
+            // Lógica específica para usuarios con rol CUSTOMER
             const member = await prisma.member.findUnique({
                 where: {
                     email: user.email,
+                },
+                include: {
+                    user: true, // Incluir la información del usuario relacionado
                 },
             });
 
@@ -49,6 +52,7 @@ export async function GET(req: Request) {
             const members = await prisma.member.findMany({
                 include: {
                     plan: true,
+                    user: true,
                 }
             });
 
@@ -94,7 +98,20 @@ export async function POST(req: Request) {
             if (!existingPlan) {
                 return NextResponse.json({ error: "Invalid plan ID" }, { status: 400 });
             }
+        }
 
+        // Verificar si el nuevo correo electrónico existe en la tabla `users`
+        if (validatedMember.email) {
+
+            const emailExists = await prisma.user.findUnique({
+                where: {
+                    email: validatedMember.email,
+                }
+            })
+
+            if (!emailExists) {
+                return NextResponse.json({ error: "Email does not exist in the users table" }, { status: 400 });
+            }
         }
 
         // Verifica si el miembro ya existe
@@ -111,6 +128,7 @@ export async function POST(req: Request) {
             },
             include: {
                 plan: true,
+                user: true,
             }
         });
 

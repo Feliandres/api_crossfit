@@ -25,7 +25,7 @@ model Plan {
   description String    @db.VarChar(255)
   price       Decimal   @db.Decimal(5, 2)
   duration    Int
-  status      Boolean   @default(true)
+  status      Boolean?   @default(true)
   createdAt   DateTime  @default(now()) @map("created_at")
   updatedAt   DateTime? @updatedAt @map("updated_at")
   Member      Member[]
@@ -35,25 +35,16 @@ model Plan {
 
 model Member {
   id               Int          @id @default(autoincrement())
-  identification   String       @db.VarChar(13)
-  name             String       @db.VarChar(50)
-  lastname         String       @db.VarChar(50)
   email            String       @unique @db.VarChar(100)
-  phone            String       @db.VarChar(20)
-  emergency_phone  String       @db.VarChar(20)
-  born_date        DateTime     @db.Date
-  direction        String       @db.VarChar(255)
-  inscription_date DateTime     @default(now())
+  inscriptionDate  DateTime     @default(now()) @map("inscription_date")
   status           Boolean?     @default(true)
-  gender           Gender
-  nacionality      Nacionality
-  createdAt        DateTime     @default(now()) @map("created_at")
   planId           Int          @default(1) @map("plan_id")
+  createdAt        DateTime     @default(now()) @map("created_at")
   updatedAt        DateTime?    @updatedAt @map("updated_at")
   Attendance       Attendance[]
   plan             Plan         @relation(fields: [planId], references: [id])
   Pay              Pay[]
-
+  user             User         @relation(fields: [email], references: [email])
   @@map("members")
 }
 
@@ -74,6 +65,7 @@ model Pay {
   date         DateTime     @db.Date
   status       Boolean      @default(true) @db.Boolean()
   payment_type Payment_Type
+  pdfUrl       String?      @map("pdf_url") // Nuevo campo para almacenar la URL del PDF
   createdAt    DateTime     @default(now()) @map("created_at")
   memberId     Int          @map("member_id")
   updatedAt    DateTime?    @updatedAt @map("updated_at")
@@ -112,19 +104,27 @@ model Session {
 }
 
 model User {
-  id            String    @id @default(cuid())
-  name          String?   @db.VarChar(50)
-  email         String    @unique @db.VarChar(100)
-  password      String?   @db.VarChar(255)
-  status        Boolean?  @default(true)
-  role          Role      @default(USER)
-  emailVerified DateTime? @map("email_verified")
-  image         String?
-  createdAt     DateTime  @default(now()) @map("created_at")
-  updatedAt     DateTime? @updatedAt @map("updated_at")
-  accounts      Account[]
-  sessions      Session[]
-
+  id                String       @id @default(cuid())
+  identification    String       @unique @db.VarChar(13)
+  name              String       @db.VarChar(50)
+  lastname          String       @db.VarChar(50)
+  email             String       @unique @db.VarChar(100)
+  password          String?      @db.VarChar(255)
+  phone             String       @db.VarChar(20)
+  emergencyPhone    String       @db.VarChar(20) @map("emergency_phone")
+  bornDate          DateTime     @db.Date @map("born_date")
+  direction         String       @db.VarChar(255)
+  gender            Gender
+  nacionality       Nacionality
+  status            Boolean?     @default(true)
+  role              Role?         @default(CUSTOMER)
+  emailVerified     DateTime?    @map("email_verified")
+  image             String?
+  createdAt         DateTime     @default(now()) @map("created_at")
+  updatedAt         DateTime?    @updatedAt @map("updated_at")
+  accounts          Account[]
+  sessions          Session[]
+  Member            Member?
   @@map("users")
 }
 
@@ -139,7 +139,7 @@ model VerificationToken {
 }
 
 enum Role {
-  USER
+  CUSTOMER
   ADMIN
   TRAINER
 }
@@ -156,7 +156,6 @@ enum Nacionality {
 
 enum Payment_Type {
   Efectivo
-  Tarjeta
   Transferencia
 }
 
@@ -165,11 +164,12 @@ enum Payment_Type {
 model MemberPaymentInfo {
   id                    Int       @id
   member_id             Int
-  member_identification String
-  member_name           String
-  member_lastname       String
   member_email          String
-  member_phone          String
+  member_inscription_date DateTime
+  member_status         Boolean?
+  user_name             String
+  user_lastname         String
+  user_phone            String
   plan_id               Int
   plan_name             String
   plan_price            Decimal
@@ -181,6 +181,7 @@ model MemberPaymentInfo {
 
   @@map("member_payment_info")
 }
+
 model TotalEarnings {
   id             Int      @id
   total_earnings Decimal

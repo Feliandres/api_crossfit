@@ -33,6 +33,7 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
             },
             include: {
                 plan: true,
+                user: true,
             }
         });
 
@@ -85,6 +86,20 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
 
         }
 
+        // Verificar si el nuevo correo electrónico existe en la tabla `users`
+        if (validatedMember.email) {
+
+            const emailExists = await prisma.user.findUnique({
+                where: {
+                    email: validatedMember.email,
+                }
+            })
+
+            if (!emailExists) {
+                return NextResponse.json({ error: "Email does not exist in the users table" }, { status: 400 });
+            }
+        }
+
         // Actualizar la membresia
         const updatedMember = await prisma.member.update({
             where: { id: idMember},
@@ -92,7 +107,8 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
                 ...validatedMember,
             },
             include:{
-                plan: true
+                plan: true,
+                user: true,
             }
         })
 
@@ -149,7 +165,8 @@ export async function DELETE(req: Request, { params }: { params: { id: string } 
                 status: newStatus,
             },
             include:{
-                plan: true
+                plan: true,
+                user: true,
             },
         })
 

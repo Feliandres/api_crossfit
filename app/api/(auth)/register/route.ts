@@ -7,36 +7,60 @@ import { getUserByEmail } from "@/data/user";
 import { sendVerificationEmail } from "@/data/mail";
 import { RegisterSchema } from "@/schemas";
 
-
 export async function POST(req: Request) {
     try {
         // Validación con Zod
-        const { name, email, password } = RegisterSchema.parse(await req.json());
+        const validatedFields = RegisterSchema.parse(await req.json());
 
-        // Hash de la contraseña
-        const hashed_password = await bcrypt.hash(password, 12);
+        const { email, password, ...userData } = validatedFields;
 
-        // Verifica si existe un usuario
-        const existingUser = await getUserByEmail(email);
+        // Validar que el usuario tenga al menos 15 años
+        const parsedBornDate = new Date(validatedFields.born_date);
+        const today = new Date();
+        const age = today.getFullYear() - parsedBornDate.getFullYear();
+        const monthDifference = today.getMonth() - parsedBornDate.getMonth();
+        const dayDifference = today.getDate() - parsedBornDate.getDate();
 
-        if (existingUser) {
-            return NextResponse.json({ error: "Email already in use"}, { status: 401 });
+        if (
+            age < 15 ||
+            (age === 15 && monthDifference < 0) ||
+            (age === 15 && monthDifference === 0 && dayDifference < 0)
+        ) {
+            return NextResponse.json({ error: "User must be at least 15 years old" }, { status: 400 });
         }
 
-        // Crear usuario en la base de datos
+        // Verificar si el email ya está en uso
+        const existingUser = await getUserByEmail(email);
+        if (existingUser) {
+            return NextResponse.json({ error: "Email already in use" }, { status: 401 });
+        }
+
+        // Hashear la contraseña
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        // Crear el usuario
         const user = await prisma.user.create({
             data: {
-                name,
                 email: email,
-                password: hashed_password,
+                password: hashedPassword,
+                identification: userData.identification,
+                name: userData.name,
+                lastname: userData.lastname,
+                bornDate: userData.born_date,
+                phone: userData.phone,
+                emergencyPhone: userData.emergency_phone,
+                direction: userData.direction,
+                gender: userData.gender,
+                nacionality: userData.nacionality
+                // Asegúrate de que todos los campos necesarios se están manejando correctamente
+                // Incluye solo los campos que están definidos en el modelo User
             },
         });
 
         // Generar token de verificación
         const verificationToken = await generateVerificationToken(email);
 
-        // Implementar verificacion de email
-
+        // Implementar verificación de email
         await sendVerificationEmail(
             verificationToken.email,
             verificationToken.token,
@@ -44,7 +68,7 @@ export async function POST(req: Request) {
 
         // Devuelve la respuesta con los datos del usuario y el token de verificación
         return NextResponse.json({
-            success: "Successfully Register",
+            success: "Successfully Registered",
             user: {
                 name: user.name,
                 email: user.email,

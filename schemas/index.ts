@@ -4,74 +4,37 @@ import * as z from "zod";
 // Definición de los enums para la validación
 const GenderEnum = z.enum([Gender.M, Gender.F]);
 const NacionalityEnum = z.enum([Nacionality.Ecuatoriano, Nacionality.Extranjero]);
-const PaymentTypeEnum = z.enum([Payment_Type.Efectivo, Payment_Type.Tarjeta, Payment_Type.Transferencia]);
-const RoleEnum = z.enum([Role.ADMIN, Role.TRAINER, Role.USER]);
+const PaymentTypeEnum = z.enum([Payment_Type.Efectivo, Payment_Type.Transferencia]);
+const RoleEnum = z.enum([Role.ADMIN, Role.TRAINER, Role.CUSTOMER]);
 
-export const updateMemberSchema = z.object({
-    identification: z.string().min(10,{
-        message: "Mininum 10 characters"
-    }).max(12,{
-        message: "Maximum 12 characters"
-    }).optional(),
-    name: z.string().min(4,{
-        message: "Mininum 4 characters"
-    }).optional(),
-    lastname: z.string().min(4,{
-        message: "Mininum 4 characters"
-    }).optional(),
-    email: z.string().email({
-        message: "Email is required",
-    }).optional(),
-    phone: z.string().min(10, {
-        message: "Minimum 10 characters"
+export const RegisterSchema = z.object({
+    identification: z.string().min(10, {
+        message: "Identification must be at least 10 characters long",
+    }).max(13, {
+        message: "Identification must be at most 13 characters long",
     }).regex(/^[0-9]+$/, {
-        message: "Phone must contain only numbers"
-    }).optional(),
-    emergency_phone: z.string().min(7, {
-        message: "Minimum 7 characters"
-    }).regex(/^[0-9]+$/, {
-        message: "Emergency phone must contain only numbers"
-    }).optional(),
-    born_date: z.preprocess((arg) => {
-        if (typeof arg === "string" || arg instanceof Date) {
-            return new Date(arg);
-        }
-        return arg;
-    }, z.date({
-        message: "Date is required"
-    })).optional(),
-    direction: z.string().min(12,{
-        message: "Mininum 12 characters"
-    }).optional(),
-    gender: GenderEnum.optional(),
-    nacionality: NacionalityEnum.optional(),
-    planId: z.number().optional(),
-})
-
-export const MemberSchema = z.object({
-    identification: z.string().min(10,{
-        message: "Mininum 10 characters"
-    }).max(12,{
-        message: "Maximum 12 characters"
+        message: "Identification must contain only numbers"
     }),
-    name: z.string().min(4,{
-        message: "Mininum 4 characters"
+    name: z.string().min(5, {
+        message: "Name is required",
     }),
-    lastname: z.string().min(4,{
-        message: "Mininum 4 characters"
+    lastname: z.string().min(5, {
+        message: "Lastname is required",
     }),
     email: z.string().email({
-        message: "Email is required",
+        message: "Valid email is required",
     }),
-    phone: z.string().min(10, {
-        message: "Minimum 10 characters"
-    }).regex(/^[0-9]+$/, {
-        message: "Phone must contain only numbers"
+    password: z.string()
+        .min(8, { message: "Password must be at least 8 characters long" })
+        .regex(/[A-Z]/, { message: "Password must contain at least one uppercase letter" })
+        .regex(/[a-z]/, { message: "Password must contain at least one lowercase letter" })
+        .regex(/[0-9]/, { message: "Password must contain at least one number" })
+        .regex(/[^A-Za-z0-9]/, { message: "Password must contain at least one special character" }),
+    phone: z.string().min(9, {
+        message: "Phone is required",
     }),
-    emergency_phone: z.string().min(7, {
-        message: "Minimum 7 characters"
-    }).regex(/^[0-9]+$/, {
-        message: "Emergency phone must contain only numbers"
+    emergency_phone: z.string().min(9, {
+        message: "Emergency phone is required",
     }),
     born_date: z.preprocess((arg) => {
         if (typeof arg === "string" || arg instanceof Date) {
@@ -81,12 +44,25 @@ export const MemberSchema = z.object({
     }, z.date({
         message: "Date is required"
     })),
-    direction: z.string().min(12,{
-        message: "Mininum 12 characters"
+    direction: z.string().min(1, {
+        message: "Direction is required",
     }),
     gender: GenderEnum,
     nacionality: NacionalityEnum,
-    planId: z.number().optional()
+});
+
+export const updateMemberSchema = z.object({
+    email: z.string().email({
+        message: "Valid email is required",
+    }).optional(),
+    planId: z.number().optional(),
+})
+
+export const MemberSchema = z.object({
+    email: z.string().email({
+        message: "Valid email is required",
+    }),
+    planId: z.number()
 })
 
 export const UpdatePlanSchema = z.object({
@@ -120,25 +96,98 @@ export const PlanSchema = z.object({
 })
 
 export const SettingsSchema = z.object({
-    name: z.optional(z.string()),
-    email: z.optional(z.string().email({
-        message: "Email is required"
-    })),
-    image: z.optional(z.string()),
+    name: z.string().min(5, {
+        message: "Name is required",
+    }).optional(),
+    lastname: z.string().min(5, {
+        message: "Lastname is required",
+    }).optional(),
+    email: z.string().email({
+        message: "Valid email is required",
+    }).optional(),
+    password: z.string()
+        .min(8, { message: "Password must be at least 8 characters long" })
+        .regex(/[A-Z]/, { message: "Password must contain at least one uppercase letter" })
+        .regex(/[a-z]/, { message: "Password must contain at least one lowercase letter" })
+        .regex(/[0-9]/, { message: "Password must contain at least one number" })
+        .regex(/[^A-Za-z0-9]/, { message: "Password must contain at least one special character" })
+        .optional(),
+    phone: z.string().min(9, {
+        message: "Phone is required",
+    }).optional(),
+    emergency_phone: z.string().min(9, {
+        message: "Emergency phone is required",
+    }).optional(),
+    direction: z.string().min(1, {
+        message: "Direction is required",
+    }).optional(),
+    image: z.string().optional(),
 });
 
+// cambiar
 export const UpdateUserSchema = z.object({
-    name: z.optional(z.string()),
-    email: z.optional(z.string().email({
-        message: "Email is required"
-    })),
-    image: z.optional(z.string()),
+    identification: z.string().min(10, {
+        message: "Identification must be at least 10 characters long",
+    }).max(13, {
+        message: "Identification must be at most 13 characters long",
+    }).regex(/^[0-9]+$/, {
+        message: "Identification must contain only numbers"
+    }).optional(),
+    name: z.string().min(5, {
+        message: "Name is required",
+    }).optional(),
+    lastname: z.string().min(5, {
+        message: "Lastname is required",
+    }).optional(),
+    email: z.string().email({
+        message: "Valid email is required",
+    }).optional(),
+    password: z.string()
+        .min(8, { message: "Password must be at least 8 characters long" })
+        .regex(/[A-Z]/, { message: "Password must contain at least one uppercase letter" })
+        .regex(/[a-z]/, { message: "Password must contain at least one lowercase letter" })
+        .regex(/[0-9]/, { message: "Password must contain at least one number" })
+        .regex(/[^A-Za-z0-9]/, { message: "Password must contain at least one special character" })
+        .optional(),
+    phone: z.string().min(9, {
+        message: "Phone is required",
+    }).optional(),
+    emergency_phone: z.string().min(9, {
+        message: "Emergency phone is required",
+    }).optional(),
+    born_date: z.preprocess((arg) => {
+        if (typeof arg === "string" || arg instanceof Date) {
+            return new Date(arg);
+        }
+        return arg;
+    }, z.date({
+        message: "Date is required"
+    })).optional(),
+    direction: z.string().min(1, {
+        message: "Direction is required",
+    }).optional(),
+    gender: GenderEnum.optional(),
+    nacionality: NacionalityEnum.optional(),
     role: RoleEnum.optional(),
+    image: z.string().optional(),
 });
 
 export const CreateUserSchema = z.object({
+    identification: z.string().min(10, {
+        message: "Identification must be at least 10 characters long",
+    }).max(13, {
+        message: "Identification must be at most 13 characters long",
+    }).regex(/^[0-9]+$/, {
+        message: "Identification must contain only numbers"
+    }),
+    name: z.string().min(5, {
+        message: "Name is required",
+    }),
+    lastname: z.string().min(5, {
+        message: "Lastname is required",
+    }),
     email: z.string().email({
-        message: "Email is required",
+        message: "Valid email is required",
     }),
     password: z.string()
         .min(8, { message: "Password must be at least 8 characters long" })
@@ -146,11 +195,26 @@ export const CreateUserSchema = z.object({
         .regex(/[a-z]/, { message: "Password must contain at least one lowercase letter" })
         .regex(/[0-9]/, { message: "Password must contain at least one number" })
         .regex(/[^A-Za-z0-9]/, { message: "Password must contain at least one special character" }),
-    name: z.string().min(5, {
-        message: "Name is required",
+    phone: z.string().min(9, {
+        message: "Phone is required",
     }),
+    emergency_phone: z.string().min(9, {
+        message: "Emergency phone is required",
+    }),
+    born_date: z.preprocess((arg) => {
+        if (typeof arg === "string" || arg instanceof Date) {
+            return new Date(arg);
+        }
+        return arg;
+    }, z.date({
+        message: "Date is required"
+    })),
+    direction: z.string().min(1, {
+        message: "Direction is required",
+    }),
+    gender: GenderEnum,
+    nacionality: NacionalityEnum,
     role: RoleEnum,
-
 });
 
 export const ResetSchema = z.object({
@@ -174,21 +238,6 @@ export const LoginSchema = z.object({
     }),
     password: z.string().min(1, {
         message: "Password is required",
-    }),
-});
-
-export const RegisterSchema = z.object({
-    email: z.string().email({
-        message: "Email is required",
-    }),
-    password: z.string()
-        .min(8, { message: "Password must be at least 8 characters long" })
-        .regex(/[A-Z]/, { message: "Password must contain at least one uppercase letter" })
-        .regex(/[a-z]/, { message: "Password must contain at least one lowercase letter" })
-        .regex(/[0-9]/, { message: "Password must contain at least one number" })
-        .regex(/[^A-Za-z0-9]/, { message: "Password must contain at least one special character" }),
-    name: z.string().min(5, {
-        message: "Name is required",
     }),
 });
 
@@ -237,4 +286,5 @@ export const UpdatePaySchema = z.object({
         message: "Date is required"
     })).optional(),
     payment_type: PaymentTypeEnum.optional(),
+    pdf_url: z.string().optional(),
 })

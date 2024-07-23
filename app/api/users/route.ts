@@ -73,7 +73,9 @@ export async function POST(req: Request) {
         }
 
         // Validación con Zod
-        const { name, email, password, role } = CreateUserSchema.parse(await req.json());
+        const validatedFields = CreateUserSchema.parse(await req.json());
+
+        const { email, password, ...userData} = validatedFields
 
         // Hash de la contraseña
         const hashed_password = await bcrypt.hash(password, 12);
@@ -88,10 +90,18 @@ export async function POST(req: Request) {
         // Crear usuario en la base de datos
         const createdUser = await prisma.user.create({
             data: {
-                name: name,
                 email: email,
                 password: hashed_password,
-                role: role,
+                identification: userData.identification,
+                name: userData.name,
+                lastname: userData.lastname,
+                bornDate: userData.born_date,
+                phone: userData.phone,
+                emergencyPhone: userData.emergency_phone,
+                direction: userData.direction,
+                gender: userData.gender,
+                nacionality: userData.nacionality,
+                role: userData.role
             },
         });
 
