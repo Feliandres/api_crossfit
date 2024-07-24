@@ -289,6 +289,7 @@ export const PaySchema = z.object({
         message: "Date is required"
     })),
     payment_type: PaymentTypeEnum,
+    pdf_url: z.string().optional()
 });
 
 export const UpdatePaySchema = z.object({
