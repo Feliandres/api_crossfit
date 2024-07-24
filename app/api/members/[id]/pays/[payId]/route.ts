@@ -160,7 +160,7 @@ export async function DELETE(req: Request, { params: { id, payId } }: { params: 
 
         return NextResponse.json({
             success: `Pay ${newStatus ? 'activated' : 'desactivated'} successfully`,
-            plan: {
+            pay: {
                 ...updatedPay
             },
         }, { status: 200 });
