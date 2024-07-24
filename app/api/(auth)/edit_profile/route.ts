@@ -35,7 +35,7 @@ export async function PUT(req: Request) {
         const { email, password, ...userData } = editProfile;
 
         // Verifica si el correo electrónico ya está en uso
-        let emailChanged = null;
+        let emailChanged = false;
         if (email && email !== userEmail) {
             const existingUser = await getUserByEmail(email);
 
@@ -53,13 +53,12 @@ export async function PUT(req: Request) {
             const verificationToken = await generateVerificationToken(email);
             await sendVerificationEmail(email, verificationToken.token);
 
-            emailChanged = null;
+            emailChanged = true;
         }
 
         // Verificar y hashear la nueva contraseña si se proporciona
         let hashedPassword: string | undefined;
         if (password) {
-    
             // Comparar la nueva contraseña con la actual
             const isPasswordSame = userPassword && await bcrypt.compare(password, userPassword);
 
@@ -95,6 +94,16 @@ export async function PUT(req: Request) {
             },
         });
 
+        // Retornar la respuesta antes de cerrar la sesión
+        const response = NextResponse.json({
+            success: "Profile updated successfully.",
+            ...(emailChanged && { message: "Please verify your new email address." }),
+            user: {
+                ...updatedUser,
+                password: hashedPassword ?? userPassword, // Incluye el hash de la contraseña en la respuesta
+            },
+        }, { status: 200 });
+
         // Cerrar la sesión si el correo electrónico ha cambiado
         if (emailChanged) {
             await prisma.session.delete({
@@ -104,12 +113,7 @@ export async function PUT(req: Request) {
             });
         }
 
-        return NextResponse.json({
-            success: "Profile updated successfully. Please verify your new email address.",
-            user: {
-                ...updatedUser
-            },
-        }, { status: 200 });
+        return response;
 
     } catch (error) {
         if (error instanceof ZodError) {
@@ -118,3 +122,4 @@ export async function PUT(req: Request) {
         return NextResponse.json({ error: "Unexpected error" }, { status: 500 });
     }
 }
+
