@@ -6,7 +6,7 @@ import { Role } from "@prisma/client";
 import { getUserSession } from "@/data/session";
 import { generateVerificationToken } from "@/data/tokens";
 import { sendVerificationEmail } from "@/data/mail";
-import { getUserByEmail } from "@/data/user";
+import { getUserByEmail, getUserById } from "@/data/user";
 import bcrypt from "bcryptjs"
 
 export async function GET(req: Request, { params }: { params: { id: string } }) {
@@ -78,7 +78,7 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
                 return NextResponse.json({ error: "Email already in use" }, { status: 401 });
             }
 
-            if (user.email !== validatedUser.email) {
+            if (existingUser?.email !== validatedUser.email) {
                 emailChanged = true;
 
                 // Actualiza emailVerified a null
@@ -97,7 +97,8 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
         let hashedPassword: string | undefined;
         if (validatedUser.password) {
             // Comparar la nueva contraseña con la actual
-            const isPasswordSame = user.password && await bcrypt.compare(validatedUser.password, user.password);
+            const existingUser = await getUserById(idUser);
+            const isPasswordSame = existingUser?.password && await bcrypt.compare(validatedUser.password, existingUser.password);
 
             if (isPasswordSame) {
                 return NextResponse.json({ error: "New password cannot be the same as the current password" }, { status: 400 });
@@ -107,23 +108,22 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
             hashedPassword = await bcrypt.hash(validatedUser.password, 12);
         }
 
+        // Construir los datos de actualización
+        const updateData: { [key: string]: any } = { ...validatedUser };
+        if (hashedPassword) {
+            updateData.password = hashedPassword;
+        }
+
         // Actualizar los datos del usuario en la base de datos
         const updatedUser = await prisma.user.update({
             where: { id: idUser },
-            data: {
-                ...validatedUser,
-                email: validatedUser.email ?? undefined, // Solo actualizar si el email ha cambiado
-                password: hashedPassword ?? undefined, // Solo actualizar si se ha proporcionado una nueva contraseña
-            },
+            data: updateData,
         });
 
         return NextResponse.json({
             success: "User updated successfully.",
             ...(emailChanged && { message: "Please verify the new email address." }),
-            user: {
-                ...updatedUser,
-                password: hashedPassword, // Incluye el hash de la contraseña en la respuesta
-            },
+            user: updatedUser,
         }, { status: 200 });
 
     } catch (error) {
