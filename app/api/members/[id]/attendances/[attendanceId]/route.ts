@@ -198,7 +198,7 @@ export async function DELETE(req: Request, { params: { id, attendanceId } }: { p
 
         return NextResponse.json({
             success: "Deleted attendance successfully",
-            plan: {
+            attendance: {
                 ...deletedAttendance
             },
         }, { status: 200 });

@@ -16,10 +16,14 @@ export const RegisterSchema = z.object({
         message: "Identification must contain only numbers"
     }),
     name: z.string().min(5, {
-        message: "Name is required",
+        message: "Name must be at least 5 characters long",
+    }).regex(/^[a-zA-Z\s]+$/, {
+        message: "Name can only contain letters and spaces",
     }),
     lastname: z.string().min(5, {
-        message: "Lastname is required",
+        message: "Lastname must be at least 5 characters long",
+    }).regex(/^[a-zA-Z\s]+$/, {
+        message: "Lastname can only contain letters and spaces",
     }),
     email: z.string().email({
         message: "Valid email is required",
@@ -56,14 +60,14 @@ export const updateMemberSchema = z.object({
         message: "Valid email is required",
     }).optional(),
     planId: z.number().optional(),
-})
+});
 
 export const MemberSchema = z.object({
     email: z.string().email({
         message: "Valid email is required",
     }),
     planId: z.number()
-})
+});
 
 export const UpdatePlanSchema = z.object({
     name: z.optional(z.string().min(5,{
@@ -78,7 +82,7 @@ export const UpdatePlanSchema = z.object({
     duration: z.optional(z.number().nonnegative(
         {message: "Not exist negative duration plan"
     })),
-})
+});
 
 export const PlanSchema = z.object({
     name: z.string().min(5,{
@@ -93,14 +97,18 @@ export const PlanSchema = z.object({
     duration: z.number().nonnegative(
         {message: "Not exist negative duration plan"
     }),
-})
+});
 
 export const SettingsSchema = z.object({
     name: z.string().min(5, {
-        message: "Name is required",
+        message: "Name must be at least 5 characters long",
+    }).regex(/^[a-zA-Z\s]+$/, {
+        message: "Name can only contain letters and spaces",
     }).optional(),
     lastname: z.string().min(5, {
-        message: "Lastname is required",
+        message: "Lastname must be at least 5 characters long",
+    }).regex(/^[a-zA-Z\s]+$/, {
+        message: "Lastname can only contain letters and spaces",
     }).optional(),
     email: z.string().email({
         message: "Valid email is required",
@@ -124,7 +132,6 @@ export const SettingsSchema = z.object({
     image: z.string().optional(),
 });
 
-// cambiar
 export const UpdateUserSchema = z.object({
     identification: z.string().min(10, {
         message: "Identification must be at least 10 characters long",
@@ -134,10 +141,14 @@ export const UpdateUserSchema = z.object({
         message: "Identification must contain only numbers"
     }).optional(),
     name: z.string().min(5, {
-        message: "Name is required",
+        message: "Name must be at least 5 characters long",
+    }).regex(/^[a-zA-Z\s]+$/, {
+        message: "Name can only contain letters and spaces",
     }).optional(),
     lastname: z.string().min(5, {
-        message: "Lastname is required",
+        message: "Lastname must be at least 5 characters long",
+    }).regex(/^[a-zA-Z\s]+$/, {
+        message: "Lastname can only contain letters and spaces",
     }).optional(),
     email: z.string().email({
         message: "Valid email is required",
@@ -181,10 +192,14 @@ export const CreateUserSchema = z.object({
         message: "Identification must contain only numbers"
     }),
     name: z.string().min(5, {
-        message: "Name is required",
+        message: "Name must be at least 5 characters long",
+    }).regex(/^[a-zA-Z\s]+$/, {
+        message: "Name can only contain letters and spaces",
     }),
     lastname: z.string().min(5, {
-        message: "Lastname is required",
+        message: "Lastname must be at least 5 characters long",
+    }).regex(/^[a-zA-Z\s]+$/, {
+        message: "Lastname can only contain letters and spaces",
     }),
     email: z.string().email({
         message: "Valid email is required",
@@ -250,7 +265,7 @@ export const AttendanceSchema = z.object({
     }, z.date({
         message: "Date is required"
     })),
-})
+});
 
 export const UpdateAttendanceSchema = z.object({
     date: z.preprocess((arg) => {
@@ -262,7 +277,7 @@ export const UpdateAttendanceSchema = z.object({
         message: "Date is required"
     }).optional()), // Hacer el campo opcional solo si es necesario
     status: z.boolean().optional(),
-})
+});
 
 export const PaySchema = z.object({
     date: z.preprocess((arg) => {
@@ -274,7 +289,7 @@ export const PaySchema = z.object({
         message: "Date is required"
     })),
     payment_type: PaymentTypeEnum,
-})
+});
 
 export const UpdatePaySchema = z.object({
     date: z.preprocess((arg) => {
@@ -287,4 +302,4 @@ export const UpdatePaySchema = z.object({
     })).optional(),
     payment_type: PaymentTypeEnum.optional(),
     pdf_url: z.string().optional(),
-})
+});

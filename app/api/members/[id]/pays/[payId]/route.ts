@@ -75,6 +75,8 @@ export async function PUT(req: Request, { params: { id, payId } }: { params: { i
         // Valida los datos con Zod
         const validatedPay = UpdatePaySchema.parse(await req.json());
 
+        const pdf_url = validatedPay.pdf_url;
+
         // Actualizar Pago por id
         const updatedPay = await prisma.pay.update({
             where: {
