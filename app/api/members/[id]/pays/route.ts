@@ -95,7 +95,7 @@ export async function POST(req: Request,{ params }: { params: { id: string }}) {
 
         return NextResponse.json({
             success: "Pay created successfully",
-            attendance: createdPay,
+            pay: createdPay,
         }, { status: 200 });
 
     } catch (error) {
