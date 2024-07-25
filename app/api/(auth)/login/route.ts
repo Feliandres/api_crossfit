@@ -34,7 +34,7 @@ export async function POST(req: Request) {
         if (!existingUser.emailVerified) {
             const verificationToken = await generateVerificationToken(existingUser.email);
             await sendVerificationEmail(verificationToken.email, verificationToken.token);
-            return NextResponse.json({ success: "Confirmation email sent" }, { status: 200 });
+            return NextResponse.json({ success: "Confirmation email sent", token: verificationToken.token }, { status: 200 });
         }
 
         // Comparar la contraseña ingresada con la almacenada en la base de datos
