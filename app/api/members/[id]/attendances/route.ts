@@ -58,9 +58,9 @@ export async function GET(req: Request,{ params }: { params: { id: string }}) {
 
 //
 
-export async function POST(req: Request,{ params }: { params: { id: string }}) {
+export async function POST(req: Request, { params }: { params: { id: string }}) {
     try {
-        // Verifica la sesion y token de usuario y trae los datos del usuario
+        // Verifica la sesión y token de usuario y trae los datos del usuario
         const { user, error, status } = await getUserSession(req);
 
         if (error) {
@@ -111,6 +111,18 @@ export async function POST(req: Request,{ params }: { params: { id: string }}) {
             return NextResponse.json({ error: "Attendance date cannot be before the member's inscription date" }, { status: 400 });
         }
 
+        // Verificar si ya existe una asistencia para el miembro en la misma fecha
+        const existingAttendance = await prisma.attendance.findFirst({
+            where: {
+                memberId: Number(params.id),
+                date: normalizedAttendanceDate,
+            },
+        });
+
+        if (existingAttendance) {
+            return NextResponse.json({ error: "Attendance for this date already exists" }, { status: 400 });
+        }
+
         // Crear Asistencia
         const createdAttendance = await prisma.attendance.create({
             data: {
@@ -135,6 +147,6 @@ export async function POST(req: Request,{ params }: { params: { id: string }}) {
         if (error instanceof ZodError) {
             return NextResponse.json({ error: "Invalid fields", details: error.errors }, { status: 400 });
         }
-        return NextResponse.json({ error: "Unexpected error"}, { status: 500 });
+        return NextResponse.json({ error: "Unexpected error" }, { status: 500 });
     }
 }

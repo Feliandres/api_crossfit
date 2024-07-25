@@ -37,6 +37,7 @@ export async function GET(req: Request) {
                     Member: {
                         include: {
                             plan: true,  // Incluir la información del plan del miembro
+                            user: true,
                         },
                     },
                 },
@@ -60,6 +61,7 @@ export async function GET(req: Request) {
                     Member: {
                         include: {
                             plan: true,  // Incluir la información del plan del miembro
+                            user: true,
                         },
                     },
                 },
