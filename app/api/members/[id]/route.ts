@@ -6,6 +6,7 @@ import { Role } from "@prisma/client";
 import { getPlanById } from "@/data/plan";
 import { getUserSession } from "@/data/session";
 
+
 export async function GET(req: Request, { params }: { params: { id: string } }) {
     try {
         // Verifica la sesion y token de usuario y trae los datos del usuario

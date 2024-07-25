@@ -32,6 +32,7 @@ export async function GET(req: Request, { params: { id, payId } }: { params: { i
                 Member: {
                     include: {
                         plan: true,  // Incluir la información del plan del miembro
+                        user: true,
                     },
                 },
             },
@@ -90,6 +91,7 @@ export async function PUT(req: Request, { params: { id, payId } }: { params: { i
                 Member: {
                     include: {
                         plan: true,  // Incluir la información del plan del miembro
+                        user: true, // Incluir la información del usuario del miembro
                     },
                 },
             },
@@ -153,6 +155,7 @@ export async function DELETE(req: Request, { params: { id, payId } }: { params: 
                 Member: {
                     include: {
                         plan: true,  // Incluir la información del plan del miembro
+                        user: true,
                     },
                 },
             },

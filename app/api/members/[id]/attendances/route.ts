@@ -38,6 +38,7 @@ export async function GET(req: Request,{ params }: { params: { id: string }}) {
                 Member: {
                     include: {
                         plan: true,  // Incluir la información del plan del miembro
+                        user: true,
                     },
                 },
             },
@@ -133,6 +134,7 @@ export async function POST(req: Request, { params }: { params: { id: string }}) 
                 Member: {
                     include: {
                         plan: true,  // Incluir la información del plan del miembro
+                        user: true,
                     },
                 },
             },
