@@ -4,6 +4,14 @@ import { Role } from "@prisma/client";
 import { ZodError } from "zod";
 import { UpdatePaySchema } from "@/schemas";
 import { getUserSession } from "@/data/session";
+import cloudinary from "cloudinary";
+
+// Configurar Cloudinary
+cloudinary.v2.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
 export async function GET(req: Request, { params: { id, payId } }: { params: { id: string; payId: string }}) {
     try {
@@ -56,27 +64,87 @@ export async function GET(req: Request, { params: { id, payId } }: { params: { i
 
 //
 
-export async function PUT(req: Request, { params: { id, payId } }: { params: { id: string; payId: string }}) {
+export async function PUT(req: Request, { params: { id, payId } }: { params: { id: string; payId: string } }) {
     try {
-        // Verifica la sesion y token de usuario y trae los datos del usuario
+        // Verifica la sesión y token de usuario
         const { user, error, status } = await getUserSession(req);
 
         if (error) {
             return NextResponse.json({ error }, { status });
         }
 
-        // Obtener Id del usuario
-        const userId = user?.id;
-
-        // verificar el rol del usuario para acceder a la ruta
+        // Verificar el rol del usuario para acceder a la ruta
         if (!user || user.role !== Role.ADMIN) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
         }
 
-        // Valida los datos con Zod
+        // Validar datos con Zod
         const validatedPay = UpdatePaySchema.parse(await req.json());
 
-        const pdf_url = validatedPay.pdf_url;
+        // Validar que la fecha del pago esté presente y no sea indefinida
+        if (!validatedPay.date) {
+            return NextResponse.json({ error: "Payment date is required" }, { status: 400 });
+        }
+
+        // Validar la fecha del pago
+        const currentDate = new Date();
+        const paymentDate = new Date(validatedPay.date);
+
+        // Función para normalizar una fecha a medianoche
+        const normalizeDate = (date: Date) => {
+            return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+        };
+
+        // Normalizar las fechas
+        const normalizedCurrentDate = normalizeDate(currentDate);
+        const normalizedPaymentDate = normalizeDate(paymentDate);
+
+        if (normalizedPaymentDate > normalizedCurrentDate) {
+            return NextResponse.json({ error: "Payment date cannot be in the future" }, { status: 400 });
+        }
+
+        // Verificar si ya existe otro pago para el miembro en la fecha dada
+        const existingPayment = await prisma.pay.findFirst({
+            where: {
+                memberId: Number(id),
+                date: normalizedPaymentDate,
+                id: { not: Number(payId) }, // Excluir el pago actual
+            },
+        });
+
+        if (existingPayment) {
+            return NextResponse.json({ error: "Another payment for this date already exists" }, { status: 400 });
+        }
+
+        // Subir archivo PDF a Cloudinary si se proporciona un nuevo PDF
+        let pdf_url: string | null = validatedPay.pdf_url ?? null; // Asegurar que pdf_url sea string o null
+
+        if (validatedPay.pdf_url) {
+            try {
+                const uploadResponse = await new Promise((resolve, reject) => {
+                    const stream = cloudinary.v2.uploader.upload_stream(
+                        {
+                            folder: "payments",
+                            resource_type: "auto",
+                        },
+                        (error, result) => {
+                            if (error) reject(error);
+                            else resolve(result);
+                        }
+                    );
+
+                    // Convertir el valor a Buffer solo si es una cadena
+                    if (typeof validatedPay.pdf_url === 'string') {
+                        stream.write(Buffer.from(validatedPay.pdf_url, 'base64'));
+                    }
+                    stream.end();
+                });
+
+                pdf_url = (uploadResponse as any).secure_url;
+            } catch (uploadError) {
+                return NextResponse.json({ error: "PDF upload failed" }, { status: 500 });
+            }
+        }
 
         // Actualizar Pago por id
         const updatedPay = await prisma.pay.update({
@@ -86,11 +154,12 @@ export async function PUT(req: Request, { params: { id, payId } }: { params: { i
             },
             data: {
                 ...validatedPay,
+                pdfUrl: pdf_url,
             },
             include: {
                 Member: {
                     include: {
-                        plan: true,  // Incluir la información del plan del miembro
+                        plan: true, // Incluir la información del plan del miembro
                         user: true, // Incluir la información del usuario del miembro
                     },
                 },
@@ -108,7 +177,7 @@ export async function PUT(req: Request, { params: { id, payId } }: { params: { i
         if (error instanceof ZodError) {
             return NextResponse.json({ error: "Invalid fields", details: error.errors }, { status: 400 });
         }
-        return NextResponse.json({ error: "Unexpected error"}, { status: 500 });
+        return NextResponse.json({ error: "Unexpected error" }, { status: 500 });
     }
 }
 

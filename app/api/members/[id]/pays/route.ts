@@ -87,6 +87,35 @@ export async function POST(req: Request, { params }: { params: { id: string }}) 
         // Validar datos con Zod
         const validatedPay = PaySchema.parse(JSON.parse(new TextDecoder().decode(buffer)));
 
+         // Validar la fecha del pago
+        const currentDate = new Date();
+        const paymentDate = new Date(validatedPay.date);
+
+        // Función para normalizar una fecha a medianoche
+        const normalizeDate = (date: Date) => {
+            return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+        };
+
+        // Normalizar las fechas
+        const normalizedCurrentDate = normalizeDate(currentDate);
+        const normalizedPaymentDate = normalizeDate(paymentDate);
+
+        if (normalizedPaymentDate > normalizedCurrentDate) {
+            return NextResponse.json({ error: "Payment date cannot be in the future" }, { status: 400 });
+        }
+
+        // Verificar si ya existe un pago para el miembro en la fecha dada
+        const existingPayment = await prisma.pay.findFirst({
+            where: {
+                memberId: Number(params.id),
+                date: normalizedPaymentDate,
+            },
+        });
+
+        if (existingPayment) {
+            return NextResponse.json({ error: "Payment for this date already exists" }, { status: 400 });
+        }
+
         // Subir archivo PDF a Cloudinary
         let pdf_url: string | null = null;
         try {
