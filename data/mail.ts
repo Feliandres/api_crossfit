@@ -4,7 +4,7 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 
 // Función para enviar correo de verificación
 export const sendVerificationEmail = async (email: string, token: string) => {
-  const confirmLink = `http://localhost:3001/new-verification?token=${token}`;
+  const confirmLink = `https://crossfit-app-beta.vercel.app/new-verification?token=${token}`;
 
   try {
     const response = await resend.emails.send({
@@ -21,7 +21,7 @@ export const sendVerificationEmail = async (email: string, token: string) => {
 
 // Función para enviar correo de reinicio de contraseña
 export const sendPasswordResetEmail = async (email: string, token: string) => {
-  const resetLink = `http://localhost:3001/new-password?token=${token}`;
+  const resetLink = `https://crossfit-app-beta.vercel.app/new-password?token=${token}`;
 
   try {
     const response = await resend.emails.send({
