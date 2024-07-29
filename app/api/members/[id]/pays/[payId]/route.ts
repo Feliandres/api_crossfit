@@ -122,6 +122,7 @@ export async function PUT(req: Request, { params: { id, payId } }: { params: { i
             try {
                 const uploadResponse = await cloudinary.v2.uploader.upload(validatedPay.pdfUrl, {
                     folder: "payments",
+                    resource_type: "raw",
                 });
                 imageUrl = uploadResponse.secure_url;
             } catch (error) {

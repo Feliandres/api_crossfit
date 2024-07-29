@@ -119,6 +119,7 @@ export async function POST(req: Request, { params }: { params: { id: string }}) 
             try {
                 const uploadResponse = await cloudinary.v2.uploader.upload(validatedPay.pdfUrl, {
                     folder: "payments",
+                    resource_type: "raw",
                 });
                 imageUrl = uploadResponse.secure_url;
             } catch (error) {
