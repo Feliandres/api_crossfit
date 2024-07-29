@@ -37,10 +37,10 @@ export const RegisterSchema = z.object({
     phone: z.string().min(9, {
         message: "Phone is required",
     }),
-    emergency_phone: z.string().min(9, {
+    emergencyPhone: z.string().min(9, {
         message: "Emergency phone is required",
     }),
-    born_date: z.preprocess((arg) => {
+    bornDate: z.preprocess((arg) => {
         if (typeof arg === "string" || arg instanceof Date) {
             return new Date(arg);
         }
@@ -123,13 +123,15 @@ export const SettingsSchema = z.object({
     phone: z.string().min(9, {
         message: "Phone is required",
     }).optional(),
-    emergency_phone: z.string().min(9, {
+    emergencyPhone: z.string().min(9, {
         message: "Emergency phone is required",
     }).optional(),
     direction: z.string().min(1, {
         message: "Direction is required",
     }).optional(),
     image: z.string().optional(),
+    gender: GenderEnum.optional(),
+    nacionality: NacionalityEnum.optional(),
 });
 
 export const UpdateUserSchema = z.object({
@@ -163,10 +165,10 @@ export const UpdateUserSchema = z.object({
     phone: z.string().min(9, {
         message: "Phone is required",
     }).optional(),
-    emergency_phone: z.string().min(9, {
+    emergencyPhone: z.string().min(9, {
         message: "Emergency phone is required",
     }).optional(),
-    born_date: z.preprocess((arg) => {
+    bornDate: z.preprocess((arg) => {
         if (typeof arg === "string" || arg instanceof Date) {
             return new Date(arg);
         }
@@ -213,10 +215,10 @@ export const CreateUserSchema = z.object({
     phone: z.string().min(9, {
         message: "Phone is required",
     }),
-    emergency_phone: z.string().min(9, {
+    emergencyPhone: z.string().min(9, {
         message: "Emergency phone is required",
     }),
-    born_date: z.preprocess((arg) => {
+    bornDate: z.preprocess((arg) => {
         if (typeof arg === "string" || arg instanceof Date) {
             return new Date(arg);
         }
@@ -289,7 +291,7 @@ export const PaySchema = z.object({
         message: "Date is required"
     })),
     payment_type: PaymentTypeEnum,
-    pdf_url: z.string().optional()
+    pdfUrl: z.string().optional()
 });
 
 export const UpdatePaySchema = z.object({
@@ -302,5 +304,5 @@ export const UpdatePaySchema = z.object({
         message: "Date is required"
     })).optional(),
     payment_type: PaymentTypeEnum.optional(),
-    pdf_url: z.string().optional(),
+    pdfUrl: z.string().optional(),
 });

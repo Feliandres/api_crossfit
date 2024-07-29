@@ -77,6 +77,17 @@ export async function POST(req: Request) {
 
         const { email, password, ...userData} = validatedFields
 
+        // Valida que la cedula no exista
+        const existingIdentification = await prisma.user.findUnique({
+            where: {
+                identification: validatedFields.identification
+            }
+        })
+
+        if (existingIdentification) {
+            return NextResponse.json({ error: "Identification already in use" }, { status: 401 });
+        }
+
         // Hash de la contraseña
         const hashed_password = await bcrypt.hash(password, 12);
 
@@ -95,9 +106,9 @@ export async function POST(req: Request) {
                 identification: userData.identification,
                 name: userData.name,
                 lastname: userData.lastname,
-                bornDate: userData.born_date,
+                bornDate: userData.bornDate,
                 phone: userData.phone,
-                emergencyPhone: userData.emergency_phone,
+                emergencyPhone: userData.emergencyPhone,
                 direction: userData.direction,
                 gender: userData.gender,
                 nacionality: userData.nacionality,

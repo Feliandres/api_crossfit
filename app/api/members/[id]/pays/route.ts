@@ -81,11 +81,8 @@ export async function POST(req: Request, { params }: { params: { id: string }}) 
             return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
         }
 
-        // Leer el cuerpo de la solicitud como arrayBuffer
-        const buffer = await req.arrayBuffer();
-
         // Validar datos con Zod
-        const validatedPay = PaySchema.parse(JSON.parse(new TextDecoder().decode(buffer)));
+        const validatedPay = PaySchema.parse(await req.json());
 
          // Validar la fecha del pago
         const currentDate = new Date();
@@ -116,28 +113,17 @@ export async function POST(req: Request, { params }: { params: { id: string }}) 
             return NextResponse.json({ error: "Payment for this date already exists" }, { status: 400 });
         }
 
-        // Subir archivo PDF a Cloudinary
-        let pdf_url: string | null = null;
-        try {
-            const uploadResponse = await new Promise((resolve, reject) => {
-                const stream = cloudinary.v2.uploader.upload_stream(
-                    {
-                        folder: "payments",
-                        resource_type: "auto",
-                    },
-                    (error, result) => {
-                        if (error) reject(error);
-                        else resolve(result);
-                    }
-                );
-
-                stream.write(Buffer.from(buffer));
-                stream.end();
-            });
-
-            pdf_url = (uploadResponse as any).secure_url;
-        } catch (uploadError) {
-            return NextResponse.json({ error: "PDF upload failed" }, { status: 500 });
+        // Subir PDF a Cloudinary si se proporciona
+        let imageUrl = validatedPay.pdfUrl;
+        if (validatedPay.pdfUrl) {
+            try {
+                const uploadResponse = await cloudinary.v2.uploader.upload(validatedPay.pdfUrl, {
+                    folder: "payments",
+                });
+                imageUrl = uploadResponse.secure_url;
+            } catch (error) {
+                return NextResponse.json({ error: "PDF upload failed" }, { status: 400 });
+            }
         }
 
         // Crear Pago con la URL del PDF
@@ -145,7 +131,7 @@ export async function POST(req: Request, { params }: { params: { id: string }}) 
             data: {
                 ...validatedPay,
                 memberId: Number(params.id),
-                pdfUrl: pdf_url, // Guardar la URL del PDF
+                pdfUrl: imageUrl, // Guardar la URL del PDF
             },
             include: {
                 Member: {

@@ -12,10 +12,21 @@ export async function POST(req: Request) {
         // Validación con Zod
         const validatedFields = RegisterSchema.parse(await req.json());
 
-        const { email, password, ...userData } = validatedFields;
+        const { identification, email, password, ...userData } = validatedFields;
+
+        // Valida que la cedula no exista
+        const existingIdentification = await prisma.user.findUnique({
+            where: {
+                identification: identification
+            }
+        })
+
+        if (existingIdentification) {
+            return NextResponse.json({ error: "Identification already in use" }, { status: 401 });
+        }
 
         // Validar que el usuario tenga al menos 15 años
-        const parsedBornDate = new Date(validatedFields.born_date);
+        const parsedBornDate = new Date(validatedFields.bornDate);
         const today = new Date();
         const age = today.getFullYear() - parsedBornDate.getFullYear();
         const monthDifference = today.getMonth() - parsedBornDate.getMonth();
@@ -43,12 +54,12 @@ export async function POST(req: Request) {
             data: {
                 email: email,
                 password: hashedPassword,
-                identification: userData.identification,
+                identification: identification,
                 name: userData.name,
                 lastname: userData.lastname,
-                bornDate: userData.born_date,
+                bornDate: userData.bornDate,
                 phone: userData.phone,
-                emergencyPhone: userData.emergency_phone,
+                emergencyPhone: userData.emergencyPhone,
                 direction: userData.direction,
                 gender: userData.gender,
                 nacionality: userData.nacionality

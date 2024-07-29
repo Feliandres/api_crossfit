@@ -108,16 +108,13 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
             hashedPassword = await bcrypt.hash(validatedUser.password, 12);
         }
 
-        // Construir los datos de actualización
-        const updateData: { [key: string]: any } = { ...validatedUser };
-        if (hashedPassword) {
-            updateData.password = hashedPassword;
-        }
-
         // Actualizar los datos del usuario en la base de datos
         const updatedUser = await prisma.user.update({
             where: { id: idUser },
-            data: updateData,
+            data: {
+                password: hashedPassword,
+                ...validatedUser,
+            }
         });
 
         return NextResponse.json({
@@ -130,7 +127,7 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
         if (error instanceof ZodError) {
             return NextResponse.json({ error: "Invalid fields", details: error.errors }, { status: 400 });
         }
-        return NextResponse.json({ error: "Unexpected error" }, { status: 500 });
+        return NextResponse.json({ error: "Unexpected error", errors: error }, { status: 500 });
     }
 }
 

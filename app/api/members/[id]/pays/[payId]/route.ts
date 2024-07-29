@@ -116,33 +116,16 @@ export async function PUT(req: Request, { params: { id, payId } }: { params: { i
             return NextResponse.json({ error: "Another payment for this date already exists" }, { status: 400 });
         }
 
-        // Subir archivo PDF a Cloudinary si se proporciona un nuevo PDF
-        let pdf_url: string | null = validatedPay.pdf_url ?? null; // Asegurar que pdf_url sea string o null
-
-        if (validatedPay.pdf_url) {
+        // Subir PDF a Cloudinary si se proporciona
+        let imageUrl = validatedPay.pdfUrl;
+        if (validatedPay.pdfUrl) {
             try {
-                const uploadResponse = await new Promise((resolve, reject) => {
-                    const stream = cloudinary.v2.uploader.upload_stream(
-                        {
-                            folder: "payments",
-                            resource_type: "auto",
-                        },
-                        (error, result) => {
-                            if (error) reject(error);
-                            else resolve(result);
-                        }
-                    );
-
-                    // Convertir el valor a Buffer solo si es una cadena
-                    if (typeof validatedPay.pdf_url === 'string') {
-                        stream.write(Buffer.from(validatedPay.pdf_url, 'base64'));
-                    }
-                    stream.end();
+                const uploadResponse = await cloudinary.v2.uploader.upload(validatedPay.pdfUrl, {
+                    folder: "payments",
                 });
-
-                pdf_url = (uploadResponse as any).secure_url;
-            } catch (uploadError) {
-                return NextResponse.json({ error: "PDF upload failed" }, { status: 500 });
+                imageUrl = uploadResponse.secure_url;
+            } catch (error) {
+                return NextResponse.json({ error: "PDF upload failed" }, { status: 400 });
             }
         }
 
@@ -154,7 +137,7 @@ export async function PUT(req: Request, { params: { id, payId } }: { params: { i
             },
             data: {
                 ...validatedPay,
-                pdfUrl: pdf_url,
+                pdfUrl: imageUrl,
             },
             include: {
                 Member: {
