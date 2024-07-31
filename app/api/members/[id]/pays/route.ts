@@ -114,6 +114,7 @@ export async function POST(req: Request, { params }: { params: { id: string }}) 
         }
 
         // Subir PDF a Cloudinary si se proporciona
+        /*
         let imageUrl = validatedPay.pdfUrl;
         if (validatedPay.pdfUrl) {
             try {
@@ -126,13 +127,14 @@ export async function POST(req: Request, { params }: { params: { id: string }}) 
                 return NextResponse.json({ error: "PDF upload failed" }, { status: 400 });
             }
         }
+        */
 
         // Crear Pago con la URL del PDF
         const createdPay = await prisma.pay.create({
             data: {
                 ...validatedPay,
                 memberId: Number(params.id),
-                pdfUrl: imageUrl, // Guardar la URL del PDF
+                 // Guardar la URL del PDF
             },
             include: {
                 Member: {
