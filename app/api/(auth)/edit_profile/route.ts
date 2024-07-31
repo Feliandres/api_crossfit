@@ -32,7 +32,7 @@ export async function PUT(req: Request) {
         // Validar datos con zod
         const editProfile = SettingsSchema.parse(await req.json());
 
-        const { email, password, ...userData } = editProfile;
+        const { email, ...userData } = editProfile;
 
         // Verifica si el correo electrónico ya está en uso
         let emailChanged = false;
@@ -56,20 +56,6 @@ export async function PUT(req: Request) {
             emailChanged = true;
         }
 
-        // Verificar y hashear la nueva contraseña si se proporciona
-        let hashedPassword: string | undefined;
-        if (password) {
-            // Comparar la nueva contraseña con la actual
-            const isPasswordSame = userPassword && await bcrypt.compare(password, userPassword);
-
-            if (isPasswordSame) {
-                return NextResponse.json({ error: "New password cannot be the same as the current password" }, { status: 400 });
-            }
-
-            // Hashear la nueva contraseña si es diferente
-            hashedPassword = await bcrypt.hash(password, 12);
-        }
-
         // Subir imagen a Cloudinary si se proporciona
         let imageUrl = editProfile.image;
         if (editProfile.image) {
@@ -88,7 +74,6 @@ export async function PUT(req: Request) {
             where: { id: userId },
             data: {
                 email: email ?? userEmail, // Solo actualizar si el email ha cambiado
-                password: hashedPassword ?? undefined, // Solo actualizar si se ha proporcionado una nueva contraseña
                 image: imageUrl ?? undefined, // Solo actualizar si se ha proporcionado una nueva imagen
                 ...userData // Actualizar otros datos del usuario
             },
@@ -100,7 +85,6 @@ export async function PUT(req: Request) {
             ...(emailChanged && { message: "Please verify your new email address." }),
             user: {
                 ...updatedUser,
-                password: hashedPassword ?? userPassword, // Incluye el hash de la contraseña en la respuesta
             },
         }, { status: 200 });
 
