@@ -88,6 +88,21 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: "Identification already in use" }, { status: 401 });
         }
 
+        // Validar que el usuario tenga al menos 15 años
+        const parsedBornDate = new Date(validatedFields.bornDate);
+        const today = new Date();
+        const age = today.getFullYear() - parsedBornDate.getFullYear();
+        const monthDifference = today.getMonth() - parsedBornDate.getMonth();
+        const dayDifference = today.getDate() - parsedBornDate.getDate();
+
+        if (
+            age < 15 ||
+            (age === 15 && monthDifference < 0) ||
+            (age === 15 && monthDifference === 0 && dayDifference < 0)
+        ) {
+            return NextResponse.json({ error: "User must be at least 15 years old" }, { status: 400 });
+        }
+
         // Hash de la contraseña
         const hashed_password = await bcrypt.hash(password, 12);
 
