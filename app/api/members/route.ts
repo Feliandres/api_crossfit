@@ -21,7 +21,7 @@ export async function GET(req: Request) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
         }
 
-        if (user.role === Role.CUSTOMER) {
+        if (user.role === Role.CUSTOMER && user.status === true) {
             // Lógica específica para usuarios con rol CUSTOMER
             const member = await prisma.member.findUnique({
                 where: {
