@@ -25,13 +25,14 @@ export async function GET(req: Request) {
                 },
             });
 
-            if (!member || user.status === false) {
+            if (!member) {
                 return NextResponse.json({ error: "No membership found for this user" }, { status: 404 });
             }
 
             const pay = await prisma.pay.findMany({
                 where: {
-                    memberId: member.id
+                    memberId: member.id,
+                    status: true
                 },
                 include: {
                     Member: {
@@ -42,6 +43,10 @@ export async function GET(req: Request) {
                     },
                 },
             })
+
+            if (!pay) {
+                return NextResponse.json({ error: "No Pays found for this user" }, { status: 404 });
+            }
 
             return NextResponse.json({
                 success: "Pay retrieved successfully",
