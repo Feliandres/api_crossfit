@@ -69,6 +69,17 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
         // Validar datos con zod
         const validatedUser = UpdateUserSchema.parse(await req.json());
 
+        // Valida que la cedula no exista
+        const existingIdentification = await prisma.user.findUnique({
+            where: {
+                identification: validatedFields.identification
+            }
+        })
+
+        if (existingIdentification) {
+            return NextResponse.json({ error: "Identification already in use" }, { status: 401 });
+        }
+
         // Verificar si el correo electrónico ya está en uso y actualizar
         let emailChanged = false;
         if (validatedUser.email) {
