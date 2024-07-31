@@ -72,7 +72,7 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
         // Valida que la cedula no exista
         const existingIdentification = await prisma.user.findUnique({
             where: {
-                identification: validatedFields.identification
+                identification: validatedUser.identification
             }
         })
 
