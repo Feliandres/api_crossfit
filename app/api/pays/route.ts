@@ -25,7 +25,7 @@ export async function GET(req: Request) {
                 },
             });
 
-            if (!member) {
+            if (!member || user.status === false) {
                 return NextResponse.json({ error: "No membership found for this user" }, { status: 404 });
             }
 
