@@ -116,6 +116,7 @@ export async function PUT(req: Request, { params: { id, payId } }: { params: { i
             return NextResponse.json({ error: "Another payment for this date already exists" }, { status: 400 });
         }
 
+        /*
         // Subir PDF a Cloudinary si se proporciona
         let imageUrl = validatedPay.pdfUrl;
         if (validatedPay.pdfUrl) {
@@ -129,6 +130,7 @@ export async function PUT(req: Request, { params: { id, payId } }: { params: { i
                 return NextResponse.json({ error: "PDF upload failed" }, { status: 400 });
             }
         }
+        */
 
         // Actualizar Pago por id
         const updatedPay = await prisma.pay.update({
@@ -138,7 +140,7 @@ export async function PUT(req: Request, { params: { id, payId } }: { params: { i
             },
             data: {
                 ...validatedPay,
-                pdfUrl: imageUrl,
+                pdfUrl: validatedPay.pdfUrl,
             },
             include: {
                 Member: {

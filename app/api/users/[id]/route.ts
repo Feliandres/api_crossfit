@@ -69,53 +69,56 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
         // Validar datos con zod
         const validatedUser = UpdateUserSchema.parse(await req.json());
 
-        // Valida que la cedula no exista
-        const existingIdentification = await prisma.user.findUnique({
-            where: {
-                identification: validatedUser.identification
-            }
-        })
+        // Obtener el usuario existente por id
+        const existingUser = await getUserById(idUser);
+        if (!existingUser) {
+            return NextResponse.json({ error: "User not found" }, { status: 404 });
+        }
 
-        if (existingIdentification) {
-            return NextResponse.json({ error: "Identification already in use" }, { status: 401 });
+        // Verificar si la cédula está siendo cambiada
+        if (validatedUser.identification !== existingUser.identification) {
+            const existingIdentification = await prisma.user.findUnique({
+                where: {
+                    identification: validatedUser.identification
+                }
+            });
+
+            if (existingIdentification) {
+                return NextResponse.json({ error: "Identification already in use" }, { status: 401 });
+            }
         }
 
         // Verificar si el correo electrónico ya está en uso y actualizar
         let emailChanged = false;
-        if (validatedUser.email) {
-            const existingUser = await getUserByEmail(validatedUser.email);
+        if (validatedUser.email && validatedUser.email !== existingUser.email) {
+            const emailUser = await getUserByEmail(validatedUser.email);
 
-            if (existingUser && existingUser.id !== idUser) {
+            if (emailUser && emailUser.id !== idUser) {
                 return NextResponse.json({ error: "Email already in use" }, { status: 401 });
             }
 
-            if (existingUser?.email !== validatedUser.email) {
-                emailChanged = true;
+            emailChanged = true;
 
-                // Actualiza emailVerified a null
-                await prisma.user.update({
-                    where: { id: idUser },
-                    data: { emailVerified: null },
-                });
+            // Actualiza emailVerified a null
+            await prisma.user.update({
+                where: { id: idUser },
+                data: { emailVerified: null },
+            });
 
-                // Generar y enviar token de verificación
-                const verificationToken = await generateVerificationToken(validatedUser.email);
-                await sendVerificationEmail(validatedUser.email, verificationToken.token);
-            }
+            // Generar y enviar token de verificación
+            const verificationToken = await generateVerificationToken(validatedUser.email);
+            await sendVerificationEmail(validatedUser.email, verificationToken.token);
         }
 
         // Verificar y hashear la nueva contraseña si se proporciona
         let hashedPassword: string | undefined;
         if (validatedUser.password) {
-            // Comparar la nueva contraseña con la actual
-            const existingUser = await getUserById(idUser);
-            const isPasswordSame = existingUser?.password && await bcrypt.compare(validatedUser.password, existingUser.password);
+            const isPasswordSame = existingUser.password && await bcrypt.compare(validatedUser.password, existingUser.password);
 
             if (isPasswordSame) {
                 return NextResponse.json({ error: "New password cannot be the same as the current password" }, { status: 400 });
             }
 
-            // Hashear la nueva contraseña si es diferente
             hashedPassword = await bcrypt.hash(validatedUser.password, 12);
         }
 
@@ -141,6 +144,7 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
         return NextResponse.json({ error: "Unexpected error", errors: error }, { status: 500 });
     }
 }
+
 
 
 //
